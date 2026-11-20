@@ -1,0 +1,76 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+body {
+  font-family: "Inter", sans-serif;
+}
+.tenant-portal {
+  font-size: 14px;
+}
+.tenant-portal .text-xs {
+  font-size: 14px;
+  line-height: 1.25rem;
+}
+.tenant-dashboard {
+  font-size: 14px;
+}
+.tenant-dashboard .text-4xl {
+  font-size: 2rem;
+  line-height: 2.25rem;
+}
+.tenant-dashboard .text-xl {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+
+button,
+select,
+label[for],
+input[type="checkbox"],
+input[type="file"],
+input[type="date"],
+input[type="time"] {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+.tenant-portal select,
+.tenant-portal input[type="date"],
+.tenant-portal input[type="time"] {
+  min-height: 42px;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.625rem;
+  background-color: #fff;
+  color: #334155;
+  accent-color: #5094fb;
+}
+
+.tenant-portal input[type="date"]::-webkit-calendar-picker-indicator,
+.tenant-portal input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0.65;
+  cursor: pointer;
+}
+
+.tenant-portal select {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 18px,
+    calc(100% - 13px) 18px;
+  background-repeat: no-repeat;
+  background-size:
+    5px 5px,
+    5px 5px;
+}
+
+.tenant-portal select:focus,
+.tenant-portal input[type="date"]:focus,
+.tenant-portal input[type="time"]:focus {
+  outline: 2px solid rgba(80, 148, 251, 0.25);
+  border-color: #5094fb;
+}

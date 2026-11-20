@@ -1,0 +1,48 @@
+.admin-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2000;
+  width: max-content;
+  max-width: min(420px, calc(100vw - 32px));
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #a7d9bd;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #166534;
+  box-shadow: 0 8px 28px #16243a20;
+  font: 400 13px/1.5 var(--font-body);
+  text-align: left;
+}
+.admin-toast--error {
+  background: #fff5f5;
+  color: #b42318;
+  border-color: #f3b8b8;
+}
+.admin-toast > svg {
+  flex-shrink: 0;
+  align-self: center;
+}
+.admin-toast > span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.admin-toast > button {
+  display: flex;
+  flex-shrink: 0;
+  border: 0;
+  padding: 2px;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+@media (max-width: 480px) {
+  .admin-toast {
+    right: 16px;
+    bottom: 16px;
+  }
+}

@@ -1,0 +1,199 @@
+import { supabase } from "./supabase";
+import { readData } from "./api";
+
+function promotionFromRow(promotion) {
+  return {
+    id: promotion.promotion_id,
+    title: promotion.promotion_title,
+    desc: promotion.promotion_description,
+    start: promotion.promotion_start_date,
+    end: promotion.promotion_end_date,
+    image: promotion.promotion_image_base64
+      ? `data:image/png;base64,${promotion.promotion_image_base64}`
+      : null,
+    views: promotion.promotion_views || 0,
+    clicks: promotion.promotion_clicks || 0,
+    active: promotion.promotion_status === "active",
+  };
+}
+
+export async function loadPromotions(storeId) {
+  if (!supabase || !storeId) throw new Error("Promotions are not available.");
+  const { data, error } = await supabase.rpc("get_my_promotions", {
+    p_store: storeId,
+  });
+  if (error) throw error;
+  return (data || []).map(promotionFromRow);
+}
+
+export async function createPromotion(storeId, promotion) {
+  const { data, error } = await supabase.rpc("create_my_promotion", {
+    p_store: storeId,
+    p_promotion: promotion,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function updatePromotion(storeId, promotionId, promotion) {
+  const { error } = await supabase.rpc("update_my_promotion", {
+    p_store: storeId,
+    p_promotion_id: promotionId,
+    p_promotion: promotion,
+  });
+  if (error) throw error;
+}
+
+export async function deletePromotion(storeId, promotionId) {
+  const { error } = await supabase.rpc("delete_my_promotion", {
+    p_store: storeId,
+    p_promotion_id: promotionId,
+  });
+  if (error) throw error;
+}
+
+export async function loadAppData() {
+  const [identities, tenants, stores] = await Promise.all([
+    readData("app_user"),
+    readData("tenant"),
+    readData("store"),
+  ]);
+  const identity = identities[0];
+  const tenant = tenants[0];
+  if (!identity || !tenant)
+    throw new Error("No active tenant assignment is available.");
+  const store = stores.find(
+    (row) => String(row.store_id) === String(tenant.store_id),
+  );
+  const [storeProfile, promotions] = await Promise.all([
+    loadStoreProfile(tenant.store_id),
+    loadPromotions(tenant.store_id),
+  ]);
+  const brand = storeProfile.brand || {};
+  const logo = brand.brand_logo_base64
+    ? `data:image/png;base64,${brand.brand_logo_base64}`
+    : brand.brand_logo_path || store?.store_logo || "/store-logo.png";
+  return {
+    profiles: {
+      tenant: {
+        ...tenant,
+        ...store,
+        role: "tenant",
+        name: store?.store_name || tenant.tenant_name,
+        subtitle: "Tenant Account",
+        userId: identity.user_auth_user_id,
+        userName: tenant.tenant_name,
+        userEmail: identity.user_email,
+        logo,
+      },
+    },
+    promotions,
+    storeProfile,
+  };
+}
+
+export async function fetchPromotions(storeId) {
+  if (!supabase || !storeId) return null;
+  const data = await readData("promotion", { storeId });
+  return data.map(promotionFromRow);
+}
+
+export async function loadStoreProfile(storeId) {
+  if (!supabase || !storeId) throw new Error("Store profile is not available.");
+  const { data, error } = await supabase.rpc("get_my_store_profile", {
+    p_store: storeId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function saveStoreProfile(storeId, profile) {
+  if (!supabase || !storeId) throw new Error("Store profile is not available.");
+  const { error } = await supabase.rpc("update_my_store_profile", {
+    p_store: storeId,
+    p_profile: profile,
+  });
+  if (error) throw error;
+}
+
+export async function signIn(email, password) {
+  if (!supabase) throw new Error("Authentication is not configured.");
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password,
+  });
+  if (error) throw error;
+  try {
+    return await getCurrentSession();
+  } catch (error) {
+    await supabase.auth.signOut();
+    throw error;
+  }
+}
+
+export async function requestPasswordReset(email) {
+  if (!supabase) throw new Error("Authentication is not configured.");
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: `${window.location.origin}/reset-password?flow=supabase&mode=recovery`,
+  });
+  if (error) throw error;
+}
+
+export async function getCurrentSession() {
+  localStorage.removeItem("navar_demo_role");
+  if (!supabase) return null;
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  if (!data.session) return null;
+  // The API verifies the token with Auth and resolves active tenant_account membership.
+  const identities = await readData("app_user");
+  if (!identities[0])
+    throw new Error("No active tenant assignment is available.");
+  return { role: "tenant", email: identities[0].user_email };
+}
+
+export async function signOut() {
+  localStorage.removeItem("navar_demo_role");
+  if (supabase) await supabase.auth.signOut();
+}
+
+export async function updateTenantProfile(profile, values) {
+  if (!supabase) throw new Error("Authentication is not configured.");
+  // Server-side membership checks apply even when a client changes profile.tenant_id.
+  const { error } = await supabase.rpc("update_my_tenant_contact", {
+    p_tenant: profile.tenant_id,
+    p_name: values.contactName,
+    p_phone: values.contactPhone,
+    p_email: values.contactEmail,
+    p_account_name: values.accountName,
+    p_type: values.contactPosition,
+  });
+  if (error)
+    throw new Error(
+      "Unable to save tenant contact details. Check your access and required database migrations.",
+    );
+  if (values.accountEmail !== profile.userEmail) {
+    const { error: authError } = await supabase.auth.updateUser({
+      email: values.accountEmail,
+    });
+    if (authError) throw authError;
+  }
+}
+
+export async function changePassword(
+  email,
+  currentPassword,
+  newPassword,
+  demo = false,
+) {
+  if (!supabase || demo) throw new Error("Sign in to change your password.");
+
+  const { error: loginError } = await supabase.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  });
+  if (loginError) throw new Error("The current password is incorrect.");
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
