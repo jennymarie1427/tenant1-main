@@ -197,50 +197,6 @@ const TITLE_ICONS = {
   "Profile Settings": Settings,
 };
 
-export function NoteTypeSelect({ value, options, open, setOpen, onChange }) {
-  const selected = options[value] || options.warn;
-  const SelectedIcon = selected.Icon;
-  return (
-    <div className="relative w-40 shrink-0">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className={`flex h-10.5 w-full items-center justify-between rounded-lg border bg-white px-3 text-left text-sm ${open ? "border-blue-500 ring-2 ring-blue-100" : "border-gray-200"}`}
-      >
-        <span className="flex items-center gap-2">
-          <SelectedIcon size={16} className={selected.color} />
-          {selected.label}
-        </span>
-        <ChevronDown
-          size={16}
-          className={`text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      {open && (
-        <div className="absolute left-0 top-full z-40 mt-1 w-full overflow-hidden rounded-lg border border-slate-300 bg-white shadow-lg">
-          {Object.entries(options).map(([key, option]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => {
-                onChange(key);
-                setOpen(false);
-              }}
-              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${key === value ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-blue-50"}`}
-            >
-              <option.Icon
-                size={16}
-                className={key === value ? "text-white" : option.color}
-              />
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export const Head = ({ title, sub, right }) => {
   const I = TITLE_ICONS[title];
   return (

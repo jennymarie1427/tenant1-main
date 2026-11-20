@@ -15,6 +15,7 @@ import {
   deletePromotion,
   loadPromotions,
   updatePromotion,
+  uploadPromotionImage,
 } from "../lib/appData";
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -277,6 +278,7 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
+                  set("imageFile", file);
                   const reader = new FileReader();
                   reader.onload = () =>
                     set("imageDataUrl", String(reader.result || ""));
@@ -360,10 +362,20 @@ export function Promotions({ promos, setPromos, storeId }) {
         status: f.active === false ? "inactive" : "active",
         image_data_url: f.imageDataUrl || "",
       };
+      let promotionId = modal.id;
       if (modal === "new") {
-        await createPromotion(storeId, payload);
+        const created = await createPromotion(storeId, payload);
+        promotionId = created?.promotion_id;
       } else {
-        await updatePromotion(storeId, modal.id, payload);
+        await updatePromotion(storeId, promotionId, payload);
+      }
+      // The Storage path uses the promotion id, so upload after the row exists,
+      // then record the path. Omitting image_data_url keeps the saved bytes.
+      if (f.imageFile && promotionId) {
+        const imagePath = await uploadPromotionImage(promotionId, f.imageFile);
+        const details = { ...payload, image_path: imagePath };
+        delete details.image_data_url;
+        await updatePromotion(storeId, promotionId, details);
       }
       const refreshed = await loadPromotions(storeId);
       setPromos(refreshed);

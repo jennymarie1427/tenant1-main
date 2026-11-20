@@ -58,10 +58,6 @@ const DEMO_TENANT_DATA = {
       "Bank Transfer",
     ],
     initialPayments: ["Cash", "GCash"],
-    initialFacilities: ["Fitting room"],
-    initialNotes: [
-      ["warn", "The restroom near our store is under maintenance"],
-    ],
     openFrom: "09:00",
     openTo: "21:00",
     floor: "2",

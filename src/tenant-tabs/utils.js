@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
 // Non-component helpers shared by the tenant tabs. Kept out of shared.jsx so
 // that file only exports components (required for React fast refresh).
@@ -38,11 +37,6 @@ export const STORE_PROFILE_DAYS = [
   "Saturday",
   "Sunday",
 ];
-export const STORE_PROFILE_NOTE_TYPES = {
-  warn: { label: "Notice", Icon: AlertTriangle, color: "text-orange-400" },
-  ok: { label: "Available", Icon: CheckCircle2, color: "text-green-500" },
-  no: { label: "Unavailable", Icon: XCircle, color: "text-red-500" },
-};
 
 export const EMPTY_CATEGORIES = {};
 

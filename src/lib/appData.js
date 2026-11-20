@@ -44,7 +44,34 @@ export async function updatePromotion(storeId, promotionId, promotion) {
   if (error) throw error;
 }
 
+// Promotion images live in the private navar-images bucket, next to the
+// existing brands/<id>/..., malls/<id>/image and admins/<id>/image files.
+const IMAGE_BUCKET = "navar-images";
+export const promotionImagePath = (promotionId) =>
+  `promotions/${promotionId}/image`;
+
+// Uploads (or replaces) the promotion's image in Storage and returns its path.
+export async function uploadPromotionImage(promotionId, file) {
+  const path = promotionImagePath(promotionId);
+  const { error } = await supabase.storage
+    .from(IMAGE_BUCKET)
+    .upload(path, file, {
+      upsert: true,
+      contentType: file.type || "image/png",
+      cacheControl: "3600",
+    });
+  if (error)
+    throw new Error(`Unable to upload the promotion image: ${error.message}`);
+  return path;
+}
+
 export async function deletePromotion(storeId, promotionId) {
+  // Remove the image first: Storage only lets a tenant touch it while the
+  // promotion row still exists. A missing file is not an error here.
+  await supabase.storage
+    .from(IMAGE_BUCKET)
+    .remove([promotionImagePath(promotionId)])
+    .catch(() => {});
   const { error } = await supabase.rpc("delete_my_promotion", {
     p_store: storeId,
     p_promotion_id: promotionId,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Upload, Save } from "lucide-react";
+import { Upload, Save } from "lucide-react";
 import {
   Card,
   Btn,
@@ -11,12 +11,10 @@ import {
   Chip,
   ChipPicker,
   Head,
-  NoteTypeSelect,
   AlertModal,
 } from "./shared";
 import {
   STORE_PROFILE_DAYS,
-  STORE_PROFILE_NOTE_TYPES,
   EMPTY_CATEGORIES,
   logoSource,
 } from "./utils";
@@ -27,12 +25,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
   const categories = data.categories || EMPTY_CATEGORIES;
   const paymentOptions = data.paymentOptions || [];
   const initialPayments = data.initialPayments || [];
-  const initialFacilities = data.initialFacilities || [];
-  const initialNotes = data.initialNotes || [];
-  const noteTypes =
-    data.noteTypes && Object.keys(data.noteTypes).length
-      ? data.noteTypes
-      : STORE_PROFILE_NOTE_TYPES;
   // operating hours
   const [openDays, setOpenDays] = useState(days.slice(0, 6));
   const [from, setFrom] = useState(data.openFrom || "");
@@ -43,15 +35,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
   const [category, setCategory] = useState(Object.keys(categories)[0] || "");
   const [payOptions, setPayOptions] = useState(paymentOptions);
   const [pay, setPay] = useState(initialPayments);
-  const [facOptions, setFacOptions] = useState(
-    categories[Object.keys(categories)[0]] || [],
-  );
-  const [fac, setFac] = useState(initialFacilities);
-  const [notes, setNotes] = useState(initialNotes);
-  const [draft, setDraft] = useState("");
-  const [kind, setKind] = useState("warn");
-  const [noteTypeOpen, setNoteTypeOpen] = useState(false);
-  const [amenityTypes, setAmenityTypes] = useState({});
   const [storeName, setStoreName] = useState(
     profile?.store_name || profile?.tenant_name || profile?.name || "",
   );
@@ -84,7 +67,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
     const store = result.store || {};
     const hours = result.operating_hours || [];
     const methods = result.payment_methods || [];
-    const amenities = result.amenities || [];
     const nextHours = hours.find((h) => !h.opthrs_is_closed) || {};
     const nextOpenDays = days.filter((day) => {
       const row = hours.find((h) => h.opthrs_day_of_week === day);
@@ -131,32 +113,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
       ...new Set(methods.map((method) => method.store_pm_name).filter(Boolean)),
     ]);
     setPay(methods.map((method) => method.store_pm_name).filter(Boolean));
-    const amenityRows = amenities.filter(
-      (item) => item.store_amenity_type !== "note",
-    );
-    const amenityNames = [
-      ...new Set(
-        amenityRows.map((item) => item.store_amenity_name).filter(Boolean),
-      ),
-    ];
-    setAmenityTypes(
-      Object.fromEntries(
-        amenityRows.map((item) => [
-          item.store_amenity_name,
-          item.store_amenity_type,
-        ]),
-      ),
-    );
-    setFacOptions(amenityNames);
-    setFac(amenityNames);
-    setNotes(
-      amenities
-        .filter((item) => item.store_amenity_type === "note")
-        .map((item) => [
-          item.store_amenity_note_type || "warn",
-          item.store_amenity_name,
-        ]),
-    );
   }
 
   const flip = (list, set, v) =>
@@ -165,12 +121,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
   const closed = days.filter((d) => !openDays.includes(d));
   const setOverride = (d, k, v) =>
     setPerDay({ ...perDay, [d]: { from, to, ...perDay[d], [k]: v } });
-  const addNote = () => {
-    if (draft.trim()) {
-      setNotes([...notes, [kind, draft.trim()]]);
-      setDraft("");
-    }
-  };
   const save = async () => {
     setSaving(true);
     setMessage("");
@@ -195,18 +145,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
         brand_logo_data_url: logoPath.startsWith("data:image/") ? logoPath : "",
         operating_hours: operatingHours,
         payment_methods: pay.map((name) => ({ name })),
-        amenities: [
-          ...fac
-            .filter((name) => name.trim())
-            .map((name) => ({ type: amenityTypes[name] || "facility", name })),
-          ...notes
-            .filter(([, text]) => text.trim())
-            .map(([noteType, name]) => ({
-              type: "note",
-              name,
-              note_type: noteType,
-            })),
-        ],
       });
       setMessage("Store profile changes saved.");
     } catch (saveError) {
@@ -412,19 +350,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
           placeholder="Add a payment option, like Apple Pay"
         />
 
-        <SectionHeading>Services and Facilities</SectionHeading>
-        <p className="mb-3 text-sm text-gray-500">
-          These suggestions match your store category. Use Edit list to add your
-          own or remove ones that don't apply.
-        </p>
-        <ChipPicker
-          options={facOptions}
-          setOptions={setFacOptions}
-          selected={fac}
-          setSelected={setFac}
-          placeholder="Add a service, like Free alterations"
-        />
-
         <SectionHeading>Store Facilities</SectionHeading>
         <label className="mb-5 flex items-center gap-3 text-sm">
           <Toggle on={hasCr} onChange={setHasCr} />
@@ -435,54 +360,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
             </span>
           </span>
         </label>
-
-        <SectionHeading>Other Notes for Visitors</SectionHeading>
-        <p className="mb-3 text-sm text-gray-500">
-          Short updates visitors can see. Example: Fitting room closed today.
-        </p>
-        <div className="mb-3 flex gap-3">
-          <NoteTypeSelect
-            value={kind}
-            options={noteTypes}
-            open={noteTypeOpen}
-            setOpen={setNoteTypeOpen}
-            onChange={setKind}
-          />
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addNote()}
-            placeholder="Type a note and press Enter or click Add..."
-            className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm outline-none focus:border-blue-400"
-          />
-          <Btn type="button" onClick={addNote} className="!py-2 text-sm">
-            <Plus size={14} />
-            Add Note
-          </Btn>
-        </div>
-        <div className="space-y-3">
-          {notes.map(([k, text], i) => {
-            const { Icon, color } = noteTypes[k] || noteTypes.warn;
-            return (
-              <div
-                key={i}
-                className="group flex items-center gap-3 rounded-lg bg-slate-50 px-4 py-4 text-sm"
-              >
-                <Icon size={16} className={color} />
-                <span className="flex-1">{text}</span>
-                <button
-                  onClick={() => setNotes(notes.filter((_, j) => j !== i))}
-                  className="text-gray-400 opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            );
-          })}
-          {notes.length === 0 && (
-            <p className="text-sm text-gray-400">No notes yet.</p>
-          )}
-        </div>
 
         <div className="mt-8 flex justify-end gap-3">
           <Btn ghost onClick={() => window.location.reload()}>
