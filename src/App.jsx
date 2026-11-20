@@ -1,10 +1,10 @@
 import { supabase } from "./lib/supabase";
-import ResetPassword from "./ResetPassword";
-import AcceptInvitation from "./AcceptInvitation";
+import ResetPassword from "./pages/ResetPassword";
+import AcceptInvitation from "./pages/AcceptInvitation";
 import { useEffect, useState } from "react";
-import Login from "./Login";
-import Tenant from "./Tenant";
-//import TenantApp from "./TenantApp";
+import Login from "./pages/Login";
+import Tenant from "./pages/Tenant";
+//import TenantApp from "./pages/TenantApp";
 import { getCurrentSession, loadAppData, signOut } from "./lib/appData";
 
 const EMPTY_APP_DATA = { profiles: {}, promotions: [] };
