@@ -49,7 +49,7 @@ function AlertModalContent({ message, variant, onClose }) {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm transition-opacity duration-200 ${on ? "opacity-100" : "opacity-0"}`}
+      className={`fixed inset-0 z-100 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm transition-opacity duration-200 ${on ? "opacity-100" : "opacity-0"}`}
       role="presentation"
       onMouseDown={onClose}
     >
@@ -74,7 +74,7 @@ function AlertModalContent({ message, variant, onClose }) {
         </h2>
         <p
           id="alert-modal-message"
-          className="mt-2 break-words text-sm text-slate-600"
+          className="mt-2 wrap-break-word text-sm text-slate-600"
         >
           {message}
         </p>
@@ -155,7 +155,7 @@ export function Toggle({ on, onChange }) {
       className={`relative h-5 w-9 shrink-0 rounded-full transition ${on ? "bg-[#5094fb]" : "bg-gray-300"}`}
     >
       <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${on ? "left-[18px]" : "left-0.5"}`}
+        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${on ? "left-4.5" : "left-0.5"}`}
       />
     </button>
   );
@@ -205,7 +205,7 @@ export function NoteTypeSelect({ value, options, open, setOpen, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`flex h-[42px] w-full items-center justify-between rounded-lg border bg-white px-3 text-left text-sm ${open ? "border-blue-500 ring-2 ring-blue-100" : "border-gray-200"}`}
+        className={`flex h-10.5 w-full items-center justify-between rounded-lg border bg-white px-3 text-left text-sm ${open ? "border-blue-500 ring-2 ring-blue-100" : "border-gray-200"}`}
       >
         <span className="flex items-center gap-2">
           <SelectedIcon size={16} className={selected.color} />
@@ -269,7 +269,7 @@ export function StyledSelect({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`flex min-h-[42px] w-full items-center justify-between gap-3 rounded-lg border bg-white px-4 py-2 text-left text-sm text-slate-700 ${open ? "border-blue-500 ring-2 ring-blue-100" : "border-gray-200"}`}
+        className={`flex min-h-10.5 w-full items-center justify-between gap-3 rounded-lg border bg-white px-4 py-2 text-left text-sm text-slate-700 ${open ? "border-blue-500 ring-2 ring-blue-100" : "border-gray-200"}`}
       >
         <span>{value}</span>
         <ChevronDown
@@ -383,7 +383,7 @@ export function LineDots({ data, max, ticks, labels, unit = "visits" }) {
   return (
     <Frame ticks={ticks} max={max} labels={labels}>
       <div
-        className="absolute inset-0 transition-[clip-path] duration-[1200ms] ease-out"
+        className="absolute inset-0 transition-[clip-path] duration-1200 ease-out"
         style={{
           clipPath: on
             ? "inset(-10% -5% -10% -5%)"
@@ -514,7 +514,7 @@ export const PromoImg = ({ src, size = "h-14 w-14" }) =>
     </span>
   ) : (
     <div
-      className={`flex ${size} aspect-square shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-blue-100 to-sky-200 text-blue-400`}
+      className={`flex ${size} aspect-square shrink-0 items-center justify-center overflow-hidden rounded-lg bg-linear-to-br from-blue-100 to-sky-200 text-blue-400`}
     >
       <Tag size={20} />
     </div>
@@ -598,7 +598,7 @@ export function ChipPicker({
             placeholder={placeholder}
             className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm outline-none focus:border-blue-400"
           />
-          <Btn onClick={add} className="!py-2 text-sm">
+          <Btn onClick={add} className="py-2! text-sm">
             <Plus size={14} />
             Add
           </Btn>

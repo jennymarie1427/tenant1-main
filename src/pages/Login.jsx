@@ -78,7 +78,7 @@ export default function Login({ onLogin }) {
   const inputClass = (hasError) =>
     `${input} ${hasError ? "border-red-400 focus:border-red-500" : "border-sky-200 focus:border-sky-400"}`;
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-400 via-sky-200 to-white to-70% p-8">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-b from-sky-400 via-sky-200 to-white to-70% p-8">
       <div className="grid w-full max-w-6xl items-center gap-16 md:grid-cols-2">
         <div className="flex flex-col items-center">
           <img src="/navar-logo.png" alt="NavAR" className="w-95" />
