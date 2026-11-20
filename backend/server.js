@@ -42,7 +42,9 @@ export function createHandler(env = process.env, request = fetch) {
     role = JSON.parse(
       Buffer.from(publicKey.split(".")[1], "base64url").toString(),
     ).role;
-  } catch {}
+  } catch {
+    // Not a JWT (e.g. a publishable key), so there is no role to inspect.
+  }
   if (publicKey.startsWith("sb_secret_") || role === "service_role")
     throw new Error("Tenant API requires a public Supabase key.");
   if (env.SUPABASE_URL && new URL(env.SUPABASE_URL).protocol !== "https:")

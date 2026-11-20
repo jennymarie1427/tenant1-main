@@ -9,10 +9,8 @@ import {
   Bar,
   Pie,
   StyledSelect,
-  downloadCsv,
-  useMounted,
-  today,
 } from "./shared";
+import { downloadCsv, useMounted, today } from "./utils";
 
 export function Analytics({ profile, data }) {
   const analytics = data || {};

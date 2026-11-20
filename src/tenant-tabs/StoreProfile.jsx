@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Plus, Trash2, Upload, X, Save } from "lucide-react";
+import { Plus, Trash2, Upload, Save } from "lucide-react";
 import {
   Card,
   Btn,
@@ -10,14 +10,16 @@ import {
   SectionHeading,
   Chip,
   ChipPicker,
-  STORE_PROFILE_DAYS,
-  STORE_PROFILE_NOTE_TYPES,
-  EMPTY_CATEGORIES,
-  logoSource,
   Head,
   NoteTypeSelect,
   AlertModal,
 } from "./shared";
+import {
+  STORE_PROFILE_DAYS,
+  STORE_PROFILE_NOTE_TYPES,
+  EMPTY_CATEGORIES,
+  logoSource,
+} from "./utils";
 import { saveStoreProfile } from "../lib/appData";
 
 export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
@@ -64,8 +66,19 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // The parent's logo state can't be set during render, so sync it here.
   useEffect(() => {
     if (!storeProfile) return;
+    const loadedLogo = logoSource(storeProfile.brand, profile.logo || "");
+    setLogo(loadedLogo);
+  }, [profile?.logo, storeProfile, setLogo]);
+
+  // Fill the form from the loaded store record whenever a new record arrives.
+  // Done during render rather than in an effect, as React recommends:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [appliedProfile, setAppliedProfile] = useState(null);
+  if (storeProfile && storeProfile !== appliedProfile) {
+    setAppliedProfile(storeProfile);
     const result = storeProfile;
     const brand = result.brand || {};
     const store = result.store || {};
@@ -81,9 +94,7 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
     setDescription(store.store_description || brand.brand_description || "");
     setHasCr(Boolean(store.store_has_cr));
     setCategory(brand.brand_category || Object.keys(categories)[0] || "");
-    const loadedLogo = logoSource(brand, profile.logo || "");
-    setLogoPath(loadedLogo);
-    setLogo(loadedLogo);
+    setLogoPath(logoSource(brand, profile.logo || ""));
     setFloor(
       result.floor?.floor_label ||
         result.floor?.floor_num?.toString() ||
@@ -146,7 +157,7 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
           item.store_amenity_name,
         ]),
     );
-  }, [categories, days, profile?.logo, storeProfile, setLogo]);
+  }
 
   const flip = (list, set, v) =>
     set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);

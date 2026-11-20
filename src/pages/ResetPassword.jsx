@@ -1,14 +1,14 @@
-import { finishPasswordSetup } from "./lib/finishPasswordSetup";
+import { finishPasswordSetup } from "../lib/finishPasswordSetup";
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "./lib/supabase";
-import { accountAccess } from "./lib/accountAccess";
+import { supabase } from "../lib/supabase";
+import { accountAccess } from "../lib/accountAccess";
 import {
   readInvitationLink,
   verifyInvitationLink,
   invitationStorageKey,
-} from "./lib/invitationLink";
-import PasswordInput from "./components/common/PasswordInput";
-import "./styles/login/login.css";
+} from "../lib/invitationLink";
+import PasswordInput from "../components/common/PasswordInput";
+import "../styles/login/login.css";
 
 export default function ResetPasswordPage() {
   const [link] = useState(() =>
@@ -19,6 +19,10 @@ export default function ResetPasswordPage() {
     progress = useRef({ passwordSaved: false, accepted: false });
   const [ready, setReady] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   useEffect(() => {
     let active = true;
     if (!verification.current)
@@ -51,11 +55,6 @@ export default function ResetPasswordPage() {
       active = false;
     };
   }, [link, attempt]);
-
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();

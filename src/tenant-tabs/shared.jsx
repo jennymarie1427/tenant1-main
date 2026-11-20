@@ -11,31 +11,14 @@ import {
   Plus,
   Check,
   X,
-  AlertTriangle,
   CheckCircle2,
-  XCircle,
   CircleAlert,
 } from "lucide-react";
+import { smooth, useMounted } from "./utils";
 
 const BLUE = "bg-[#5094fb]";
 
-const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
-export const today = () => new Date().toISOString().slice(0, 10);
-
-export function downloadCsv(filename, rows) {
-  const csv = rows.map((r) => r.map(cell).join(",")).join("\n");
-  const url = URL.createObjectURL(
-    new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" }),
-  );
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
 
 /* small shared bits */
 export const Card = ({ className = "", children }) => (
@@ -186,11 +169,6 @@ export const Logo = ({ src = "/store-logo.png", size = "h-24 w-24" }) => (
   />
 );
 
-export function logoSource(brand, fallback) {
-  if (brand?.brand_logo_base64)
-    return `data:image/png;base64,${brand.brand_logo_base64}`;
-  return brand?.brand_logo_path || fallback;
-}
 
 export function LogoButton({ setLogo, onFile, children }) {
   return (
@@ -217,20 +195,6 @@ const TITLE_ICONS = {
   Promotions: Tag,
   Analytics: BarChart3,
   "Profile Settings": Settings,
-};
-export const STORE_PROFILE_DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-export const STORE_PROFILE_NOTE_TYPES = {
-  warn: { label: "Notice", Icon: AlertTriangle, color: "text-orange-400" },
-  ok: { label: "Available", Icon: CheckCircle2, color: "text-green-500" },
-  no: { label: "Unavailable", Icon: XCircle, color: "text-red-500" },
 };
 
 export function NoteTypeSelect({ value, options, open, setOpen, onChange }) {
@@ -276,7 +240,6 @@ export function NoteTypeSelect({ value, options, open, setOpen, onChange }) {
     </div>
   );
 }
-export const EMPTY_CATEGORIES = {};
 
 export const Head = ({ title, sub, right }) => {
   const I = TITLE_ICONS[title];
@@ -340,17 +303,6 @@ export const SectionHeading = ({ children }) => (
 );
 
 /* charts */
-export function smooth(pts) {
-  let d = `M${pts[0]}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] || pts[i],
-      p1 = pts[i],
-      p2 = pts[i + 1],
-      p3 = pts[i + 2] || p2;
-    d += ` C${[p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]},${[p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]},${p2}`;
-  }
-  return d;
-}
 
 export function Frame({ ticks, max, labels, h = "h-64", children, legend }) {
   const safeMax = max > 0 ? max : 1;
@@ -391,14 +343,6 @@ export function Frame({ ticks, max, labels, h = "h-64", children, legend }) {
   );
 }
 
-export function useMounted() {
-  const [m, setM] = useState(false);
-  useEffect(() => {
-    const id = setTimeout(() => setM(true), 30);
-    return () => clearTimeout(id);
-  }, []);
-  return m;
-}
 
 export const Tip = ({ children }) => (
   <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-3 py-1.5 text-xs text-white shadow-lg group-hover:block">

@@ -18,4 +18,9 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Node.js code: the backend server and the node:test suites.
+    files: ['backend/**/*.{js,cjs}', 'test/**/*.js'],
+    languageOptions: { globals: globals.node },
+  },
 ])

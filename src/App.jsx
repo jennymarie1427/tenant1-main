@@ -4,7 +4,7 @@ import AcceptInvitation from "./AcceptInvitation";
 import { useEffect, useState } from "react";
 import Login from "./Login";
 import Tenant from "./Tenant";
-import TenantApp from "./TenantApp";
+//import TenantApp from "./TenantApp";
 import { getCurrentSession, loadAppData, signOut } from "./lib/appData";
 
 const EMPTY_APP_DATA = { profiles: {}, promotions: [] };

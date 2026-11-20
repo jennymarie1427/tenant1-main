@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
-import { requestPasswordReset, signIn } from "./lib/appData";
-import PasswordInput from "./components/common/PasswordInput";
-import { AlertModal } from "./tenant-tabs/shared";
-import "./styles/login/login.css";
+import { requestPasswordReset, signIn } from "../lib/appData";
+import PasswordInput from "../components/common/PasswordInput";
+import { AlertModal } from "../tenant-tabs/shared";
+import "../styles/login/login.css";
+
+const ErrorText = ({ children }) =>
+  children ? (
+    <p className="mt-2 pl-2 text-sm text-red-600" role="alert">
+      {children}
+    </p>
+  ) : null;
 
 // onLogin receives the role: "super_admin" | "mall_admin" | "tenant"
 export default function Login({ onLogin }) {
@@ -70,13 +77,6 @@ export default function Login({ onLogin }) {
     "w-full rounded-2xl border bg-sky-50/80 px-6 py-5 text-gray-800 outline-none placeholder:text-gray-500";
   const inputClass = (hasError) =>
     `${input} ${hasError ? "border-red-400 focus:border-red-500" : "border-sky-200 focus:border-sky-400"}`;
-  const ErrorText = ({ children }) =>
-    children ? (
-      <p className="mt-2 pl-2 text-sm text-red-600" role="alert">
-        {children}
-      </p>
-    ) : null;
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-400 via-sky-200 to-white to-70% p-8">
       <div className="grid w-full max-w-6xl items-center gap-16 md:grid-cols-2">

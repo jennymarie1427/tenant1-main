@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "./lib/supabase";
-import { accountAccess } from "./lib/accountAccess";
+import { supabase } from "../lib/supabase";
+import { accountAccess } from "../lib/accountAccess";
 import {
   readInvitationLink,
   verifyInvitationLink,
   invitationStorageKey,
-} from "./lib/invitationLink";
+} from "../lib/invitationLink";
 export default function AcceptInvitation() {
   const [link] = useState(() =>
     readInvitationLink(window.location, sessionStorage),
