@@ -11,8 +11,11 @@ function promotionFromRow(promotion) {
     image: promotion.promotion_image_base64
       ? `data:image/png;base64,${promotion.promotion_image_base64}`
       : null,
-    views: promotion.promotion_views || 0,
-    clicks: promotion.promotion_clicks || 0,
+    // Email metrics: inboxes reached, estimated opens, and recipients who
+    // navigated to the store within 7 days of the email.
+    emailed: Number(promotion.promotion_emailed) || 0,
+    opened: Number(promotion.promotion_opened) || 0,
+    emailVisits: Number(promotion.promotion_email_visits) || 0,
     active: promotion.promotion_status === "active",
   };
 }
@@ -24,6 +27,18 @@ export async function loadPromotions(storeId) {
   });
   if (error) throw error;
   return (data || []).map(promotionFromRow);
+}
+
+// Customer visits (navigation sessions to this store), peak times,
+// demographics and promotion email metrics for the last `days` days (7, 30 or 90).
+export async function loadStoreAnalytics(storeId, days = 7) {
+  if (!supabase || !storeId) throw new Error("Analytics are not available.");
+  const { data, error } = await supabase.rpc("get_my_store_analytics", {
+    p_store: storeId,
+    p_days: days,
+  });
+  if (error) throw error;
+  return data;
 }
 
 export async function createPromotion(storeId, promotion) {
@@ -63,6 +78,20 @@ export async function uploadPromotionImage(promotionId, file) {
   if (error)
     throw new Error(`Unable to upload the promotion image: ${error.message}`);
   return path;
+}
+
+// Emails a newly created promotion to registered mobile users who have visited
+// the store's mall (supabase/functions/notify-promotion). Returns
+// { queued, mall_name }; sending continues on the server after this returns.
+export async function notifyPromotionVisitors(promotionId) {
+  const { data, error } = await supabase.functions.invoke("notify-promotion", {
+    body: { promotion_id: promotionId },
+  });
+  if (error) {
+    const body = await error.context?.json?.().catch(() => null);
+    throw new Error(body?.error || "Unable to send the promotion email.");
+  }
+  return data;
 }
 
 export async function deletePromotion(storeId, promotionId) {

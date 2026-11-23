@@ -86,7 +86,12 @@ export default function Tenant({
 
   const views = {
     Dashboard: (
-      <Dashboard promos={promos} go={navigate} data={tenantData.dashboard} />
+      <Dashboard
+        promos={promos}
+        go={navigate}
+        data={tenantData.dashboard}
+        storeId={profile?.store_id}
+      />
     ),
     "Store Profile": (
       <StoreProfile
@@ -104,7 +109,13 @@ export default function Tenant({
         storeId={profile?.store_id}
       />
     ),
-    Analytics: <Analytics profile={profile} data={tenantData.analytics} />,
+    Analytics: (
+      <Analytics
+        profile={profile}
+        data={tenantData.analytics}
+        storeId={profile?.store_id}
+      />
+    ),
     "Profile Settings": <ProfileSettings logo={logo} profile={profile} />,
   };
   return (

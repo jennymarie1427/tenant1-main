@@ -16,6 +16,7 @@ import {
   loadPromotions,
   updatePromotion,
   uploadPromotionImage,
+  notifyPromotionVisitors,
 } from "../lib/appData";
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -217,7 +218,7 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
       image: null,
       start: "",
       end: "",
-      notify: true,
+      notify: false,
     },
   );
   const [zoomImage, setZoomImage] = useState(null);
@@ -296,16 +297,18 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
             onChange={(start, end) => setF((c) => ({ ...c, start, end }))}
           />
         </div>
-        <div className="flex items-center justify-between border-t pt-4">
-          <div>
-            <p className="font-medium">Notify Registered Users</p>
-            <p className="text-sm text-gray-500">
-              Send email notification to all registered users about this
-              promotion
-            </p>
+        {!initial && (
+          <div className="flex items-center justify-between gap-4 border-t pt-4">
+            <div>
+              <p className="font-medium">Notify Registered Users</p>
+              <p className="text-sm text-gray-500">
+                Email this promotion to NavAR app users who have visited your
+                mall. You can send one promotion email per day.
+              </p>
+            </div>
+            <Toggle on={f.notify} onChange={(v) => set("notify", v)} />
           </div>
-          <Toggle on={f.notify} onChange={(v) => set("notify", v)} />
-        </div>
+        )}
         <div className="mt-5 flex justify-end gap-3">
           <Btn ghost onClick={onClose} className="!py-2.5">
             Cancel
@@ -343,12 +346,13 @@ export function Promotions({ promos, setPromos, storeId }) {
   const [modal, setModal] = useState(null); // null | "new" | promo
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
   const stat = [
     ["Total Promotions", promos.length],
     ["Active", promos.filter((p) => p.active).length],
-    ["Total Views", promos.reduce((s, p) => s + p.views, 0).toLocaleString()],
-    ["Total Clicks", promos.reduce((s, p) => s + p.clicks, 0).toLocaleString()],
+    ["Emails Opened", promos.reduce((s, p) => s + (p.opened || 0), 0).toLocaleString()],
+    ["Visits from Email", promos.reduce((s, p) => s + (p.emailVisits || 0), 0).toLocaleString()],
   ];
   const save = async (f) => {
     setSaving(true);
@@ -380,6 +384,21 @@ export function Promotions({ promos, setPromos, storeId }) {
       const refreshed = await loadPromotions(storeId);
       setPromos(refreshed);
       setModal(null);
+      // Only new promotions can be emailed. The promotion is already saved,
+      // so an email problem is reported without failing the save.
+      if (modal === "new" && f.notify && promotionId) {
+        try {
+          const result = await notifyPromotionVisitors(promotionId);
+          const mall = result?.mall_name || "your mall";
+          setNotice(
+            result?.queued
+              ? `Promotion created. Emailing ${result.queued} ${result.queued === 1 ? "visitor" : "visitors"} of ${mall}.`
+              : `Promotion created. No registered visitors of ${mall} can receive promotion emails yet, so no email was sent.`,
+          );
+        } catch (notifyError) {
+          setError(`Promotion created, but the email wasn't sent: ${notifyError.message}`);
+        }
+      }
     } catch (saveError) {
       setError(saveError.message || "Unable to save promotion.");
     } finally {
@@ -398,7 +417,14 @@ export function Promotions({ promos, setPromos, storeId }) {
           </Btn>
         }
       />
-      <AlertModal message={error} onClose={() => setError("")} />
+      <AlertModal
+        message={error || notice}
+        variant={error ? "error" : "success"}
+        onClose={() => {
+          setError("");
+          setNotice("");
+        }}
+      />
       <div className="mb-6 grid grid-cols-4 gap-6">
         {stat.map(([l, v]) => (
           <Card key={l} className="p-6">
@@ -414,14 +440,22 @@ export function Promotions({ promos, setPromos, storeId }) {
               {[
                 "Promotion",
                 "Duration",
-                "Views",
-                "Clicks",
+                "Emailed",
+                "Opened",
+                "Visits",
                 "Status",
                 "Actions",
               ].map((h, i) => (
                 <th
                   key={h}
-                  className={`px-6 py-4 font-semibold ${i === 5 ? "text-right" : ""}`}
+                  title={
+                    {
+                      Emailed: "Inboxes this promotion's email reached",
+                      Opened: "People who opened the email (an estimate)",
+                      Visits: "Recipients who navigated to your store within 7 days of the email",
+                    }[h]
+                  }
+                  className={`px-6 py-4 font-semibold ${i === 6 ? "text-right" : ""}`}
                 >
                   {h}
                 </th>
@@ -451,13 +485,14 @@ export function Promotions({ promos, setPromos, storeId }) {
                   <br />
                   to {p.end}
                 </td>
+                <td className="px-6 py-4">{(p.emailed || 0).toLocaleString()}</td>
                 <td className="px-6 py-4">
                   <span className="flex items-center gap-2">
                     <Eye size={15} className="text-gray-400" />
-                    {p.views.toLocaleString()}
+                    {(p.opened || 0).toLocaleString()}
                   </span>
                 </td>
-                <td className="px-6 py-4">{p.clicks.toLocaleString()}</td>
+                <td className="px-6 py-4">{(p.emailVisits || 0).toLocaleString()}</td>
                 <td className="px-6 py-4">
                   <span
                     className={`rounded-full px-3 py-1 text-sm ${p.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}
