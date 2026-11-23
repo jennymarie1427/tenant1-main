@@ -12,6 +12,7 @@ import { Promotions } from "../tenant-tabs/Promotions";
 import { Analytics } from "../tenant-tabs/InsightsPage";
 import { ProfileSettings } from "../tenant-tabs/ProfileSettings";
 import { Logo } from "../tenant-tabs/shared";
+import { OfflineModeBanner } from "../components/common/ConnectionStatus";
 
 const NAV = [
   ["Dashboard", LayoutDashboard],
@@ -42,6 +43,7 @@ export default function Tenant({
   promotions,
   storeProfile,
   data,
+  offlineSavedAt,
 }) {
   const tenantData = data || {
     dashboard: {
@@ -168,7 +170,10 @@ export default function Tenant({
           </button>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 px-8 py-8">{views[page]}</main>
+      <main className="min-w-0 flex-1 px-8 py-8">
+        {offlineSavedAt && <OfflineModeBanner savedAt={offlineSavedAt} />}
+        {views[page]}
+      </main>
     </div>
   );
 }

@@ -40,6 +40,12 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
     profile?.store_description || "",
   );
   const [hasCr, setHasCr] = useState(Boolean(profile?.store_has_cr));
+  const [contactNum, setContactNum] = useState(
+    profile?.store_contact_num || profile?.tenant_contact_num || "",
+  );
+  const [contactEmail, setContactEmail] = useState(
+    profile?.store_email || profile?.tenant_email || profile?.userEmail || "",
+  );
   const [floor, setFloor] = useState(data.floor || "");
   const [unit, setUnit] = useState(data.unit || "");
   const [logoPath, setLogoPath] = useState(profile?.logo || "");
@@ -69,6 +75,8 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
     setStoreName(store.store_name || "");
     setDescription(store.store_description || brand.brand_description || "");
     setHasCr(Boolean(store.store_has_cr));
+    setContactNum(store.store_contact_num || profile?.tenant_contact_num || "");
+    setContactEmail(store.store_email || profile?.tenant_email || profile?.userEmail || "");
     setCategory(brand.brand_category || Object.keys(categories)[0] || "");
     setLogoPath(logoSource(brand, profile.logo || ""));
     setFloor(
@@ -133,6 +141,8 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
         store_name: storeName,
         store_description: description,
         store_has_cr: hasCr,
+        store_contact_num: contactNum.trim(),
+        store_email: contactEmail.trim(),
         unit_label: unit,
         brand_category: category,
         brand_logo_path: logoPath.startsWith("data:") ? "" : logoPath,
@@ -214,16 +224,21 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
         <SectionHeading>Contact Information</SectionHeading>
         <Field
           label="Phone"
-          defaultValue={
-            profile?.store_contact_num || profile?.tenant_contact_num
-          }
+          type="tel"
+          inputMode="tel"
+          maxLength={20}
+          placeholder="e.g. 0917 123 4567"
+          value={contactNum}
+          onChange={(e) => setContactNum(e.target.value)}
           className="mb-4"
         />
         <Field
           label="Email"
-          defaultValue={
-            profile?.store_email || profile?.tenant_email || profile?.userEmail
-          }
+          type="email"
+          maxLength={100}
+          placeholder="e.g. hello@yourstore.com"
+          value={contactEmail}
+          onChange={(e) => setContactEmail(e.target.value)}
           className="mb-4"
         />
         <SectionHeading>Operating Hours</SectionHeading>

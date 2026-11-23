@@ -31,6 +31,51 @@ On Windows PowerShell, use `Copy-Item` in place of `cp`.
 
 If `frontend/.env.local` has no Supabase values, the app falls back to local demo data, so you can preview the dashboards without any setup.
 
+### Offline mode (for slow or no internet)
+
+The portal runs on your computer, but its data, sign-in and emails come from Supabase in the cloud. To keep working when the connection is poor:
+
+- Every time the portal loads while online, it saves a copy of your store, promotions and analytics in the browser.
+- If the internet drops or is too slow, it shows that saved copy with an **Offline mode** banner (with the time it was saved). You can browse every page; changes can't be saved until you reconnect. It reloads by itself when the connection returns.
+- Signing out deletes the saved copy.
+
+**Before a presentation:** start the app while online, sign in as the tenant, and open the Dashboard, Promotions and Analytics (each Analytics range you want to show) once. Then leave the browser signed in. Sending promotion emails always needs internet.
+
+## Features
+
+- **Dashboard:** customer visits (navigation sessions to your store), unique visitors, visits from promotion emails, active promotions.
+- **Store Profile:** logo, name, description, contact information, operating hours, payment methods, comfort room.
+- **Promotions:** create, edit, activate and delete promotions; images are stored in Supabase Storage (`navar-images/promotions/<id>/image`). Promotions become **inactive automatically** after their end date (nightly job plus a check whenever the list loads).
+- **Promotion emails:** turn on *Notify Registered Users* when creating a promotion to email NavAR app users who visited the mall (each promotion is emailed once). Each email is tracked as **Emailed / Opened (estimate) / Visits from email** (recipients who navigated to the store within 7 days).
+- **Analytics:** visits over time (7 / 30 / 90 days), peak visit times, age and gender of visitors, promotion performance, CSV export.
+- **Loading and connection states:** skeleton loading screens, an offline screen, an offline banner, and offline mode.
+
+## Promotion email setup (Supabase)
+
+Emails are sent by the `notify-promotion` edge function through Gmail SMTP. Add these in **Supabase dashboard → Edge Functions → Secrets**:
+
+| Secret | Value |
+| --- | --- |
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `465` (Supabase blocks ports 25 and 587) |
+| `SMTP_USER` | The sending Gmail address |
+| `SMTP_PASS` | A Gmail **app password** (needs 2-Step Verification) |
+| `SMTP_FROM` | `NavAR Promotions <the same Gmail address>` |
+
+Gmail allows about 500 recipients a day per account. New gmail.com senders may land in spam at first; marking emails "Not spam" helps, and a custom domain with an email provider is the long-term fix.
+
+### Edge functions (`supabase/functions/`)
+
+| Function | Purpose |
+| --- | --- |
+| `notify-promotion` | Sends a promotion email to eligible visitors (`{ "promotion_id": 1 }`), plus `{ "mode": "health" }` (checks the SMTP login) and `{ "mode": "preview", "promotion_id": 1 }` (one sample to the sending Gmail). |
+| `promotion-open` | Invisible image in each email; counts an open once per recipient. |
+| `promotion-unsubscribe` | Unsubscribe link in each email; turns off promotion alerts for that user. |
+
+### Database migrations (`supabase/migrations/`)
+
+Every database change made for this portal is saved here in order (promotion images, email notifications and tracking, store analytics, auto-expiring promotions, and so on). They are already applied to the NavAR project; the files document what changed and can be re-applied to a new project in filename order.
+
 ## Environment variables
 
 | File | Variable | What it is |
@@ -75,7 +120,7 @@ Run every command from the project root.
 ├── frontend/             React + Vite app (the tenant portal)
 │   ├── src/
 │   │   ├── App.jsx       Routing between login, invitations and dashboards
-│   │   ├── pages/        Full-screen pages (Login, Tenant, MallAdmin, SuperAdmin, …)
+│   │   ├── pages/        Full-screen pages (Login, Tenant portal, password reset, invitations, demo)
 │   │   ├── tenant-tabs/  Tabs inside the tenant dashboard + shared UI pieces
 │   │   ├── components/   Reusable components
 │   │   ├── lib/          Supabase client, API calls, data loading
@@ -91,7 +136,7 @@ Run every command from the project root.
 │   └── .env.example      Copy to .env
 ├── supabase/
 │   ├── migrations/       Database changes applied to the NavAR project
-│   └── functions/        Edge functions (promotion emails, unsubscribe)
+│   └── functions/        Edge functions (promotion emails, open tracking, unsubscribe)
 ├── eslint.config.js
 └── package.json          Workspace root: shared scripts and tooling
 ```

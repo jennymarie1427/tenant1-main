@@ -3,11 +3,12 @@ import { ArrowRight, ArrowUp } from "lucide-react";
 import { useStoreInsights } from "../lib/useStoreInsights";
 import { formatDateRangeLong } from "./utils";
 import { ChartSkeleton, StatCardsSkeleton } from "../components/common/Skeleton";
+import { SavedCopyNote } from "../components/common/ConnectionStatus";
 
 const EMPTY_VISITS = { data: [], max: 0, ticks: [], labels: [] };
 
 export function Dashboard({ promos, go, data, storeId }) {
-  const { view, loading, error } = useStoreInsights(storeId, 7);
+  const { view, loading, error, savedAt } = useStoreInsights(storeId, 7);
   const stats = view?.dashboardStats || data?.stats || [];
   const visits = view?.visits || data?.visits || EMPTY_VISITS;
   const hasVisits = visits.data.some((v) => v > 0);
@@ -15,6 +16,7 @@ export function Dashboard({ promos, go, data, storeId }) {
   return (
     <div className="tenant-dashboard">
       <Head title="Dashboard" />
+      {savedAt && <SavedCopyNote savedAt={savedAt} />}
       {error && (
         <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
           {error}

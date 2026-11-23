@@ -14,6 +14,7 @@ import { downloadCsv, useMounted, today } from "./utils";
 import { ANALYTICS_RANGES } from "../lib/storeInsights";
 import { useStoreInsights } from "../lib/useStoreInsights";
 import { ChartSkeleton, Skeleton, StatCardsSkeleton } from "../components/common/Skeleton";
+import { SavedCopyNote } from "../components/common/ConnectionStatus";
 
 const EMPTY_SERIES = { data: [], max: 0, ticks: [], labels: [] };
 
@@ -28,7 +29,7 @@ export function Analytics({ profile, data, storeId }) {
   const on = useMounted();
   const [range, setRange] = useState(ANALYTICS_RANGES[0].label);
   const days = ANALYTICS_RANGES.find((r) => r.label === range)?.days || 7;
-  const { view, loading, error } = useStoreInsights(storeId, days);
+  const { view, loading, error, savedAt } = useStoreInsights(storeId, days);
   const analytics = view || data || {};
   const live = Boolean(storeId);
   const firstLoad = loading && !view;
@@ -91,6 +92,7 @@ export function Analytics({ profile, data, storeId }) {
           />
         }
       />
+      {savedAt && <SavedCopyNote savedAt={savedAt} />}
       {error && (
         <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
           {error}

@@ -9,6 +9,12 @@ import { getCurrentSession, loadAppData, signOut } from "./lib/appData";
 import { hasStoredSession, useOnlineStatus } from "./lib/useOnlineStatus";
 import { ConnectionBanner, OfflineScreen } from "./components/common/ConnectionStatus";
 import { LoginSkeleton, PortalSkeleton } from "./components/common/Skeleton";
+import {
+  clearSnapshots,
+  isConnectionError,
+  loadWorkspaceSnapshot,
+  saveWorkspaceSnapshot,
+} from "./lib/offlineCache";
 
 const EMPTY_APP_DATA = { profiles: {}, promotions: [] };
 
@@ -40,8 +46,11 @@ function WorkspaceApp() {
   const [session, setSession] = useState(null);
   const [appData, setAppData] = useState(null);
   const [loadError, setLoadError] = useState("");
+  // When set, the portal is showing the saved offline copy from this time.
+  const [offlineSavedAt, setOfflineSavedAt] = useState(null);
   const logout = async () => {
-    await signOut();
+    clearSnapshots();
+    await signOut().catch(() => {});
     setSession(null);
     setLoadError("");
     window.location.replace("/login");
@@ -65,9 +74,21 @@ function WorkspaceApp() {
           return null;
         }
         setSession(currentSession);
-        return loadAppData().then(setAppData);
+        return loadAppData().then((loaded) => {
+          saveWorkspaceSnapshot(loaded);
+          setAppData(loaded);
+        });
       })
       .catch((error) => {
+        // Offline mode: a connection problem (not a real error) while a
+        // signed-in copy is saved -> show the store from that copy.
+        const saved = isConnectionError(error) && hasStoredSession() ? loadWorkspaceSnapshot() : null;
+        if (saved?.data?.profiles?.tenant) {
+          setSession({ role: "tenant", offline: true });
+          setAppData(saved.data);
+          setOfflineSavedAt(saved.savedAt);
+          return;
+        }
         setSession(null);
         setAppData(EMPTY_APP_DATA);
         setLoadError(error.message || "Unable to load tenant data.");
@@ -87,6 +108,7 @@ function WorkspaceApp() {
     try {
       setLoadError("");
       const loaded = await loadAppData();
+      saveWorkspaceSnapshot(loaded);
       setAppData(loaded);
       setSession(session);
     } catch (error) {
@@ -101,6 +123,7 @@ function WorkspaceApp() {
       profile={appData.profiles.tenant}
       promotions={appData.promotions}
       storeProfile={appData.storeProfile}
+      offlineSavedAt={offlineSavedAt}
     />
   );
 }

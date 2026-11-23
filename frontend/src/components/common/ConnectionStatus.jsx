@@ -1,6 +1,48 @@
 import { useEffect, useState } from "react";
-import { RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { CloudOff, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
+import { formatSavedAt } from "../../lib/offlineCache";
+
+// Small note above charts that are showing a saved copy (offline mode).
+export function SavedCopyNote({ savedAt }) {
+  return (
+    <p className="mb-4 flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2.5 text-sm text-amber-800" role="status">
+      <CloudOff size={16} className="shrink-0" />
+      Showing saved numbers from {formatSavedAt(savedAt)} because the connection is unavailable.
+    </p>
+  );
+}
+
+// Shown at the top of the portal while it's displaying the saved offline copy.
+// Reloads by itself when the browser reports the connection is back.
+export function OfflineModeBanner({ savedAt }) {
+  useEffect(() => {
+    const reconnect = () => window.location.reload();
+    window.addEventListener("online", reconnect);
+    return () => window.removeEventListener("online", reconnect);
+  }, []);
+  return (
+    <div
+      className="mb-6 flex items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
+      role="status"
+    >
+      <CloudOff size={22} className="shrink-0 text-amber-600" />
+      <p className="flex-1">
+        <b className="font-semibold">Offline mode.</b> Showing your store as it was
+        saved on {formatSavedAt(savedAt)}. You can browse everything, but changes
+        can&rsquo;t be saved until you&rsquo;re back online.
+      </p>
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 font-medium text-white hover:bg-amber-700"
+      >
+        <RefreshCw size={14} />
+        Reconnect
+      </button>
+    </div>
+  );
+}
 
 // Full-page screen when the app can't load because there's no connection.
 // Reloads by itself as soon as the connection comes back.
