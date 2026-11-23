@@ -144,7 +144,7 @@ export function buildAnalyticsView(result = {}) {
     dashboardStats: [
       stat("Customer Visits", visits, changeText(visits, Number(totals.previous_visits) || 0, days)),
       stat("Unique Visitors", totals.unique_visitors, { note: `Last ${days} days` }),
-      stat("Visits from Email", emailVisits, { note: "Came within 7 days of a promotion email" }),
+      stat("Visits from Email", emailVisits, { note: "All promotions · came within 7 days of the email" }),
     ],
     visits: buildVisitSeries(result.daily, days),
     peak,
