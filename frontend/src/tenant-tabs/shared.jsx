@@ -335,7 +335,10 @@ export function LineDots({ data, max, ticks, labels, unit = "visits" }) {
       </p>
     );
   const n = data.length;
-  const pts = data.map((v, i) => [(i / (n - 1)) * 100, 100 - (v / max) * 100]);
+  // Each point sits at the centre of its slot, directly above its x-axis label
+  // (the labels below are evenly spaced, centred flex items).
+  const safeMax = max > 0 ? max : 1;
+  const pts = data.map((v, i) => [((i + 0.5) / n) * 100, 100 - (v / safeMax) * 100]);
   return (
     <Frame ticks={ticks} max={max} labels={labels}>
       <div
@@ -443,17 +446,24 @@ export function Pie({ slices }) {
             style={{ left: hover.x + 12, top: hover.y - 12 }}
           >
             {slices[hover.i][0]}: {slices[hover.i][1]}%
+            {slices[hover.i][3] != null &&
+              ` (${slices[hover.i][3]} ${slices[hover.i][3] === 1 ? "visitor" : "visitors"})`}
           </span>
         )}
       </div>
       <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm">
-        {slices.map(([l, v, c], i) => (
+        {slices.map(([l, v, c, count], i) => (
           <span
             key={l}
             className={`flex items-center gap-2 ${hover?.i === i ? "font-semibold" : ""}`}
           >
             <i className="h-3 w-3 rounded-sm" style={{ background: c }} />
             {l}: {v}%
+            {count != null && (
+              <span className="text-gray-500">
+                ({count} {count === 1 ? "visitor" : "visitors"})
+              </span>
+            )}
           </span>
         ))}
       </div>

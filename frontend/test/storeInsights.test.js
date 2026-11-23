@@ -7,7 +7,7 @@ import {
   buildDemographics,
   changeText,
   buildAnalyticsView,
-} from "../src/lib/analytics.js";
+} from "../src/lib/storeInsights.js";
 
 const days = (from, values) =>
   values.map((visits, i) => {
@@ -49,16 +49,25 @@ test("peak times use two-hour buckets", () => {
   assert.equal(peak.labels[0], "12 AM");
 });
 
-test("demographics stay hidden below the privacy threshold", () => {
-  const hidden = buildDemographics({ min_group: 5, age: null, gender: null, age_known: 1, gender_known: 1 });
-  assert.deepEqual(hidden.age, []);
-  assert.deepEqual(hidden.gender, []);
-  assert.match(hidden.genderNote, /at least 5 visitors/);
+test("a single visitor shows as 100% with the visitor count", () => {
+  const one = buildDemographics({ gender: { Female: 1 }, age: { "18-24": 1 } });
+  assert.deepEqual(one.gender, [["Female", 100, "#f472b6", 1]]);
+  assert.equal(one.age[0][1], 100);
+  assert.equal(one.genderBasis, "Based on 1 visitor with a gender in their NavAR profile");
+  assert.equal(one.genderNote, "");
+});
+
+test("no demographic data shows a note instead of a chart", () => {
+  const none = buildDemographics({ age: null, gender: null });
+  assert.deepEqual(none.age, []);
+  assert.match(none.ageNote, /No visitors have their age/);
+  assert.equal(none.ageBasis, "");
 });
 
 test("demographic slices are percentages that add up to 100", () => {
-  const shown = buildDemographics({ min_group: 5, gender: { Female: 2, Male: 1 }, age: { "18-24": 1, "25-34": 1, "35-44": 1 } });
+  const shown = buildDemographics({ gender: { Female: 2, Male: 1 }, age: { "18-24": 1, "25-34": 1, "35-44": 1 } });
   assert.equal(shown.gender.reduce((s, x) => s + x[1], 0), 100);
+  assert.equal(shown.genderBasis, "Based on 3 visitors with a gender in their NavAR profile");
   assert.equal(shown.age.reduce((s, x) => s + x[1], 0), 100);
   assert.equal(shown.gender[0][0], "Female");
   assert.equal(shown.genderNote, "");

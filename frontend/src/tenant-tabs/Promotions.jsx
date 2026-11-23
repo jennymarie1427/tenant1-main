@@ -10,6 +10,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Card, Btn, Field, Toggle, PromoImg, Head, AlertModal } from "./shared";
+import { formatLongDate } from "./utils";
 import {
   createPromotion,
   deletePromotion,
@@ -43,7 +44,6 @@ function PromotionDateRangePicker({
   const ref = useRef(null);
   const todayIso = toIso(new Date());
 
-  // close on outside click or Escape
   useEffect(() => {
     if (!open) return;
     const onDown = (e) => {
@@ -61,7 +61,7 @@ function PromotionDateRangePicker({
   }, [open]);
 
   const openFor = (field) => {
-    if (open && activeField === field) return setOpen(false); // click the same field again to close
+    if (open && activeField === field) return setOpen(false); 
     setActiveField(field);
     setMonth(monthStart((field === "end" ? end : start) || start || end));
     setOpen(true);
@@ -69,7 +69,6 @@ function PromotionDateRangePicker({
 
   const pick = (iso) => {
     if (activeField === "start") {
-      // new start is after the old end: start over with this as the start
       if (end && iso > end) {
         onChange(iso, "");
         return setActiveField("end");
@@ -303,19 +302,19 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
               <p className="font-medium">Notify Registered Users</p>
               <p className="text-sm text-gray-500">
                 Email this promotion to NavAR app users who have visited your
-                mall. You can send one promotion email per day.
+                mall.
               </p>
             </div>
             <Toggle on={f.notify} onChange={(v) => set("notify", v)} />
           </div>
         )}
         <div className="mt-5 flex justify-end gap-3">
-          <Btn ghost onClick={onClose} className="!py-2.5">
+          <Btn ghost onClick={onClose} className="py-2.5!">
             Cancel
           </Btn>
           <Btn
             onClick={() => ok && onSave(f)}
-            className={`!py-2.5 ${ok ? "" : "opacity-50"}`}
+            className={`py-2.5! ${ok ? "" : "opacity-50"}`}
             disabled={saving}
           >
             {saving
@@ -328,7 +327,7 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
       </div>
       {zoomImage && (
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-8"
+          className="fixed inset-0 z-70 flex items-center justify-center bg-black/75 p-8"
           onClick={() => setZoomImage(null)}
         >
           <img
@@ -384,8 +383,7 @@ export function Promotions({ promos, setPromos, storeId }) {
       const refreshed = await loadPromotions(storeId);
       setPromos(refreshed);
       setModal(null);
-      // Only new promotions can be emailed. The promotion is already saved,
-      // so an email problem is reported without failing the save.
+
       if (modal === "new" && f.notify && promotionId) {
         try {
           const result = await notifyPromotionVisitors(promotionId);
@@ -480,10 +478,10 @@ export function Promotions({ promos, setPromos, storeId }) {
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm">
-                  {p.start}
+                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                  {formatLongDate(p.start)} -
                   <br />
-                  to {p.end}
+                  {formatLongDate(p.end)}
                 </td>
                 <td className="px-6 py-4">{(p.emailed || 0).toLocaleString()}</td>
                 <td className="px-6 py-4">
@@ -575,7 +573,7 @@ export function Promotions({ promos, setPromos, storeId }) {
       )}
       {preview && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-8"
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 p-8"
           onClick={() => setPreview(null)}
         >
           <img

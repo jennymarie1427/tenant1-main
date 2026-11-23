@@ -11,20 +11,27 @@ import {
   StyledSelect,
 } from "./shared";
 import { downloadCsv, useMounted, today } from "./utils";
-import { ANALYTICS_RANGES } from "../lib/analytics";
-import { useStoreAnalytics } from "../lib/useStoreAnalytics";
+import { ANALYTICS_RANGES } from "../lib/storeInsights";
+import { useStoreInsights } from "../lib/useStoreInsights";
+import { ChartSkeleton, Skeleton, StatCardsSkeleton } from "../components/common/Skeleton";
 
 const EMPTY_SERIES = { data: [], max: 0, ticks: [], labels: [] };
 
-// storeId -> live analytics from the database. Without one (demo mode), the
-// `data` prop is shown instead.
+const PieSkeleton = () => (
+  <div className="flex flex-col items-center gap-4 py-4" aria-hidden="true">
+    <Skeleton className="h-44 w-44 rounded-full" />
+    <Skeleton className="h-4 w-40" />
+  </div>
+);
+
 export function Analytics({ profile, data, storeId }) {
   const on = useMounted();
   const [range, setRange] = useState(ANALYTICS_RANGES[0].label);
   const days = ANALYTICS_RANGES.find((r) => r.label === range)?.days || 7;
-  const { view, loading, error } = useStoreAnalytics(storeId, days);
+  const { view, loading, error } = useStoreInsights(storeId, days);
   const analytics = view || data || {};
   const live = Boolean(storeId);
+  const firstLoad = loading && !view;
 
   const stats = analytics.stats || [];
   const visits = analytics.visits || EMPTY_SERIES;
@@ -56,12 +63,12 @@ export function Analytics({ profile, data, storeId }) {
       ...pLabels.map((l, i) => [l, peak.data[i]]),
       [],
       ["Age Distribution"],
-      ["Age Group", "Percent"],
-      ...age.map(([l, v]) => [l, `${v}%`]),
+      ["Age Group", "Percent", "Visitors"],
+      ...age.map(([l, v, , n]) => [l, `${v}%`, n ?? ""]),
       [],
       ["Gender Distribution"],
-      ["Gender", "Percent"],
-      ...gender.map(([l, v]) => [l, `${v}%`]),
+      ["Gender", "Percent", "Visitors"],
+      ...gender.map(([l, v, , n]) => [l, `${v}%`, n ?? ""]),
       [],
       ["Promotion Performance"],
       ["Promotion", "Emailed", "Opened (estimate)", "Visits from email"],
@@ -89,9 +96,11 @@ export function Analytics({ profile, data, storeId }) {
           {error}
         </p>
       )}
-      <div className={`mb-6 grid grid-cols-3 gap-6 transition-opacity ${loading && view ? "opacity-60" : ""}`}>
-        {(loading && !view ? ["Customer Visits", "Arrivals", "Unique Visitors"].map((l) => [l, "…"]) : stats).map(
-          ([label, value, change, note]) => (
+      {firstLoad ? (
+        <StatCardsSkeleton />
+      ) : (
+        <div className={`mb-6 grid grid-cols-3 gap-6 transition-opacity ${loading ? "opacity-60" : ""}`}>
+          {stats.map(([label, value, change, note]) => (
             <Card key={label} className="p-6">
               <p className="text-sm text-gray-500">{label}</p>
               <p className="my-1 text-4xl">{value}</p>
@@ -104,16 +113,16 @@ export function Analytics({ profile, data, storeId }) {
                 <p className="text-sm text-gray-500">{note}</p>
               )}
             </Card>
-          ),
-        )}
-      </div>
+          ))}
+        </div>
+      )}
       <Card className="mb-6 p-6">
         <h3 className="mb-1 text-xl">Customer Visits Over Time</h3>
         <p className="mb-6 text-sm text-gray-500">
           NavAR app users who chose your store as their navigation destination.
         </p>
-        {loading && !view
-          ? empty("Loading visits…")
+        {firstLoad
+          ? <ChartSkeleton />
           : hasVisits || !live
             ? <LineDots key={range} data={visits.data} max={visits.max} ticks={visits.ticks} labels={visits.labels} />
             : empty(`No customer visits in the ${range.toLowerCase()}.`)}
@@ -121,7 +130,9 @@ export function Analytics({ profile, data, storeId }) {
       <Card className="mb-6 p-6">
         <h3 className="mb-1 text-xl">Peak Visit Times</h3>
         <p className="mb-6 text-sm text-gray-500">When navigation to your store starts (Philippine time).</p>
-        {hasPeak || !live ? (
+        {firstLoad ? (
+          <ChartSkeleton />
+        ) : hasPeak || !live ? (
           <Frame ticks={peak.ticks} max={peak.max} labels={pLabels} h="h-64">
             <div className="absolute inset-0 flex">
               {peak.data.map((v, i) => (
@@ -138,17 +149,31 @@ export function Analytics({ profile, data, storeId }) {
             </div>
           </Frame>
         ) : (
-          empty(loading && !view ? "Loading…" : "No visits to show yet.")
+          empty("No visits to show yet.")
         )}
       </Card>
       <div className="mb-6 grid grid-cols-2 gap-6">
         <Card className="p-6">
           <h3 className="text-xl">Age Distribution</h3>
-          {age.length || !analytics.ageNote ? <Pie slices={age} /> : empty(analytics.ageNote)}
+          {firstLoad ? (
+            <PieSkeleton />
+          ) : (
+            <>
+              {analytics.ageBasis && <p className="text-sm text-gray-500">{analytics.ageBasis}</p>}
+              {age.length || !analytics.ageNote ? <Pie slices={age} /> : empty(analytics.ageNote)}
+            </>
+          )}
         </Card>
         <Card className="p-6">
           <h3 className="text-xl">Gender Distribution</h3>
-          {gender.length || !analytics.genderNote ? <Pie slices={gender} /> : empty(analytics.genderNote)}
+          {firstLoad ? (
+            <PieSkeleton />
+          ) : (
+            <>
+              {analytics.genderBasis && <p className="text-sm text-gray-500">{analytics.genderBasis}</p>}
+              {gender.length || !analytics.genderNote ? <Pie slices={gender} /> : empty(analytics.genderNote)}
+            </>
+          )}
         </Card>
       </div>
       <Card className="mb-6 p-6">
@@ -158,7 +183,9 @@ export function Analytics({ profile, data, storeId }) {
           the email (an estimate), and people who navigated to your store in
           the NavAR app within 7 days of receiving it.
         </p>
-        {perf.length === 0 ? (
+        {firstLoad ? (
+          <ChartSkeleton />
+        ) : perf.length === 0 ? (
           empty("No promotions yet.")
         ) : (
           <>
@@ -231,7 +258,7 @@ export function Analytics({ profile, data, storeId }) {
         <p className="text-sm text-gray-500">
           Download all the data on this page as a CSV file.
         </p>
-        <Btn onClick={exportCsv} className="!py-2 text-sm">
+        <Btn onClick={exportCsv} className="py-2! text-sm">
           <Download size={16} />
           Export
         </Btn>

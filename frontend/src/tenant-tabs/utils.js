@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
 
-// Non-component helpers shared by the tenant tabs. Kept out of shared.jsx so
-// that file only exports components (required for React fast refresh).
-
 const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
 export const today = () => new Date().toISOString().slice(0, 10);
@@ -40,14 +37,57 @@ export const STORE_PROFILE_DAYS = [
 
 export const EMPTY_CATEGORIES = {};
 
+export function formatLongDate(value) {
+  if (!value) return "";
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+export const formatDateRangeLong = (start, end) =>
+  [formatLongDate(start), formatLongDate(end)].filter(Boolean).join(" - ");
+
 export function smooth(pts) {
+  const n = pts.length;
+  if (n === 0) return "";
+  if (n === 1) return `M${pts[0]}`;
+  const dx = [];
+  const slope = [];
+  for (let i = 0; i < n - 1; i++) {
+    dx[i] = pts[i + 1][0] - pts[i][0];
+    slope[i] = (pts[i + 1][1] - pts[i][1]) / dx[i];
+  }
+  const m = new Array(n);
+  m[0] = slope[0];
+  m[n - 1] = slope[n - 2];
+  for (let i = 1; i < n - 1; i++)
+    m[i] = slope[i - 1] * slope[i] <= 0 ? 0 : (slope[i - 1] + slope[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (slope[i] === 0) {
+      m[i] = 0;
+      m[i + 1] = 0;
+      continue;
+    }
+    const a = m[i] / slope[i];
+    const b = m[i + 1] / slope[i];
+    const h = a * a + b * b;
+    if (h > 9) {
+      const t = 3 / Math.sqrt(h);
+      m[i] = t * a * slope[i];
+      m[i + 1] = t * b * slope[i];
+    }
+  }
   let d = `M${pts[0]}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] || pts[i],
-      p1 = pts[i],
-      p2 = pts[i + 1],
-      p3 = pts[i + 2] || p2;
-    d += ` C${[p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]},${[p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]},${p2}`;
+  for (let i = 0; i < n - 1; i++) {
+    const [x0, y0] = pts[i];
+    const [x1, y1] = pts[i + 1];
+    const step = dx[i] / 3;
+    d += ` C${[x0 + step, y0 + m[i] * step]},${[x1 - step, y1 - m[i + 1] * step]},${pts[i + 1]}`;
   }
   return d;
 }

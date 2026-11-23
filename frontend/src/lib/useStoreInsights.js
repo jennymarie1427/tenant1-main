@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { loadStoreAnalytics } from "./appData";
-import { buildAnalyticsView } from "./analytics";
+import { buildAnalyticsView } from "./storeInsights";
 
 // Loads store analytics for the Dashboard and Analytics pages.
 // Returns { view, loading, error }. While a new range loads, the previous
 // view stays on screen so the charts don't flash empty.
-export function useStoreAnalytics(storeId, days = 7) {
+export function useStoreInsights(storeId, days = 7) {
   const key = storeId ? `${storeId}:${days}` : "";
   const [state, setState] = useState({ key: "", view: null, error: "" });
 

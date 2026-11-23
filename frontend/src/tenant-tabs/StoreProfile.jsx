@@ -25,13 +25,11 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
   const categories = data.categories || EMPTY_CATEGORIES;
   const paymentOptions = data.paymentOptions || [];
   const initialPayments = data.initialPayments || [];
-  // operating hours
   const [openDays, setOpenDays] = useState(days.slice(0, 6));
   const [from, setFrom] = useState(data.openFrom || "");
   const [to, setTo] = useState(data.openTo || "");
   const [custom, setCustom] = useState(false);
   const [perDay, setPerDay] = useState({});
-  // additional info
   const [category, setCategory] = useState(Object.keys(categories)[0] || "");
   const [payOptions, setPayOptions] = useState(paymentOptions);
   const [pay, setPay] = useState(initialPayments);
@@ -49,16 +47,12 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // The parent's logo state can't be set during render, so sync it here.
   useEffect(() => {
     if (!storeProfile) return;
     const loadedLogo = logoSource(storeProfile.brand, profile.logo || "");
     setLogo(loadedLogo);
   }, [profile?.logo, storeProfile, setLogo]);
 
-  // Fill the form from the loaded store record whenever a new record arrives.
-  // Done during render rather than in an effect, as React recommends:
-  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
   const [appliedProfile, setAppliedProfile] = useState(null);
   if (storeProfile && storeProfile !== appliedProfile) {
     setAppliedProfile(storeProfile);

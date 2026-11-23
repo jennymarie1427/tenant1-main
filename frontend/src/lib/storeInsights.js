@@ -1,6 +1,6 @@
-// Turns the get_my_store_analytics result into the shapes the Dashboard and
+// Turns the get_my_store_insights result into the shapes the Dashboard and
 // Analytics charts expect. Pure functions, so they're unit-tested in
-// test/analytics.test.js without a database.
+// test/storeInsights.test.js without a database.
 
 export const ANALYTICS_RANGES = [
   { label: "Last 7 days", days: 7 },
@@ -77,32 +77,37 @@ export function buildPeakTimes(hourly = []) {
   return { data, labels, tips, ...niceScale(Math.max(0, ...data)) };
 }
 
-// Counts -> [label, percent, color] slices that add up to 100.
+// Counts -> [label, percent, color, count] slices; percents add up to 100.
 function toSlices(counts, order, colorFor) {
   const entries = order
     .map((label) => [label, Number(counts?.[label]) || 0])
     .filter(([, n]) => n > 0);
   const total = entries.reduce((sum, [, n]) => sum + n, 0);
   if (!total) return [];
-  const slices = entries.map(([label, n]) => [label, Math.round((n / total) * 100), colorFor(label)]);
+  const slices = entries.map(([label, n]) => [label, Math.round((n / total) * 100), colorFor(label), n]);
   const drift = 100 - slices.reduce((sum, s) => sum + s[1], 0);
   if (drift) slices.reduce((a, b) => (b[1] > a[1] ? b : a))[1] += drift;
   return slices;
 }
 
+const visitorsText = (n) => `${n} ${n === 1 ? "visitor" : "visitors"}`;
+
 export function buildDemographics(demographics = {}) {
-  const minGroup = demographics.min_group ?? 5;
+  const age = toSlices(demographics.age, AGE_GROUPS, (l) => AGE_COLORS[AGE_GROUPS.indexOf(l)]);
+  const gender = toSlices(demographics.gender, ["Female", "Male", "Other"], (l) => GENDER_COLORS[l]);
+  const ageTotal = age.reduce((sum, s) => sum + s[3], 0);
+  const genderTotal = gender.reduce((sum, s) => sum + s[3], 0);
   return {
-    age: toSlices(demographics.age, AGE_GROUPS, (l) => AGE_COLORS[AGE_GROUPS.indexOf(l)]),
-    gender: toSlices(demographics.gender, ["Female", "Male", "Other"], (l) => GENDER_COLORS[l]),
-    ageNote: demographics.age ? "" : notEnough(demographics.age_known, minGroup, "age"),
-    genderNote: demographics.gender ? "" : notEnough(demographics.gender_known, minGroup, "gender"),
+    age,
+    gender,
+    ageBasis: ageTotal ? `Based on ${visitorsText(ageTotal)} with an age in their NavAR profile` : "",
+    genderBasis: genderTotal ? `Based on ${visitorsText(genderTotal)} with a gender in their NavAR profile` : "",
+    ageNote: age.length ? "" : "No visitors have their age in their NavAR profile yet.",
+    genderNote: gender.length ? "" : "No visitors have their gender in their NavAR profile yet.",
   };
 }
 
-function notEnough(known = 0, minGroup = 5, field) {
-  return `Shown once at least ${minGroup} visitors have their ${field} in their NavAR profile (currently ${known}). This keeps individual shoppers anonymous.`;
-}
+export const formatVisitors = visitorsText;
 
 // Change vs the previous period of the same length, for the stat cards.
 export function changeText(current, previous, days) {

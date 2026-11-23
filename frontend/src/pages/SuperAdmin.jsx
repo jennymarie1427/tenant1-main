@@ -272,7 +272,7 @@ function EmailLogs() {
           {failed} email{failed > 1 ? "s" : ""} failed to deliver. Click the row to view details and resend
         </div>
       )}
-      <div className="min-h-[28rem] rounded-2xl border border-gray-100 bg-white">
+      <div className="min-h-112 rounded-2xl border border-gray-100 bg-white">
         <div className="flex items-center gap-3 p-5">
           <input value={q} onChange={(e) => setQ(e.target.value)} className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-blue-500" placeholder="Search" />
           <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-md border border-gray-300 px-3 py-2 text-xs">
@@ -340,7 +340,7 @@ function EmailLogs() {
           </div>
         </Modal>
       )}
-      {toast && <div className="fixed bottom-6 left-1/2 z-[70] -translate-x-1/2 rounded-lg bg-slate-800 px-5 py-3 text-sm text-white shadow-lg">{toast}</div>}
+      {toast && <div className="fixed bottom-6 left-1/2 z-70 -translate-x-1/2 rounded-lg bg-slate-800 px-5 py-3 text-sm text-white shadow-lg">{toast}</div>}
     </>
   );
 }
@@ -356,7 +356,7 @@ function AuditLogs() {
         <StatBox n="3" label="Admins Active" c="orange" />
         <StatBox n="1" label="System Actions" c="purple" />
       </div>
-      <div className="min-h-[28rem] rounded-2xl border border-gray-100 bg-white">
+      <div className="min-h-112 rounded-2xl border border-gray-100 bg-white">
         <Toolbar filters={["All Modules", "All Admins"]} count={18} />
         <table className="w-full text-left">
           <thead className="border-y text-gray-500">
@@ -405,7 +405,7 @@ function LineChart({ data, h = 200 }) {
   const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`).join(" ");
   return (
     // the line is revealed from left to right
-    <div className="transition-[clip-path] duration-[1400ms] ease-out" style={{ clipPath: on ? "inset(-5% -2% -5% -2%)" : "inset(-5% 102% -5% -2%)" }}>
+    <div className="transition-[clip-path] duration-1400 ease-out" style={{ clipPath: on ? "inset(-5% -2% -5% -2%)" : "inset(-5% 102% -5% -2%)" }}>
       <svg viewBox={`0 0 ${w} ${h}`} className="h-52 w-full" preserveAspectRatio="none">
         {[0, 1, 2, 3].map((i) => <line key={i} x1="0" x2={w} y1={(h / 4) * i} y2={(h / 4) * i} stroke="#eee" strokeDasharray="4" />)}
         <polyline points={pts} fill="none" stroke="#2563eb" strokeWidth="3" strokeLinejoin="round" />
@@ -440,7 +440,7 @@ function Meter({ label, value, max, color = "bg-blue-600", sub, delay = 0 }) {
 
 function KPI({ label, value, note, color }) {
   return (
-    <Card className="!p-5">
+    <Card className="p-5!">
       <p className="text-xs font-semibold uppercase text-gray-500">{label}</p>
       <p className={`mt-2 font-mono text-3xl font-bold ${color}`}>{value}</p>
       <p className="mt-1 text-xs text-gray-400">{note}</p>

@@ -11,7 +11,6 @@ const ErrorText = ({ children }) =>
     </p>
   ) : null;
 
-// onLogin receives the role: "super_admin" | "mall_admin" | "tenant"
 export default function Login({ onLogin }) {
   const [resetSuccess, setResetSuccess] = useState(
     () => sessionStorage.getItem("navar-password-updated") === "true",
@@ -21,7 +20,7 @@ export default function Login({ onLogin }) {
   }, []);
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
-  const [errors, setErrors] = useState({}); // { user, pass, reset, form }
+  const [errors, setErrors] = useState({});
   const [forgotPassword, setForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);

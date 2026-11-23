@@ -9,7 +9,7 @@ import {
 import { Dashboard } from "../tenant-tabs/Dashboard";
 import { StoreProfile } from "../tenant-tabs/StoreProfile";
 import { Promotions } from "../tenant-tabs/Promotions";
-import { Analytics } from "../tenant-tabs/Analytics";
+import { Analytics } from "../tenant-tabs/InsightsPage";
 import { ProfileSettings } from "../tenant-tabs/ProfileSettings";
 import { Logo } from "../tenant-tabs/shared";
 
@@ -35,7 +35,7 @@ function readPage() {
     "Dashboard"
   );
 }
-/* shell */
+
 export default function Tenant({
   onLogout,
   profile,

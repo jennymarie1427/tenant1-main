@@ -6,6 +6,9 @@ import Login from "./pages/Login";
 import Tenant from "./pages/Tenant";
 //import TenantApp from "./pages/TenantApp";
 import { getCurrentSession, loadAppData, signOut } from "./lib/appData";
+import { hasStoredSession, useOnlineStatus } from "./lib/useOnlineStatus";
+import { ConnectionBanner, OfflineScreen } from "./components/common/ConnectionStatus";
+import { LoginSkeleton, PortalSkeleton } from "./components/common/Skeleton";
 
 const EMPTY_APP_DATA = { profiles: {}, promotions: [] };
 
@@ -13,9 +16,16 @@ const EMPTY_APP_DATA = { profiles: {}, promotions: [] };
 
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
-  if (path === "/accept-invitation") return <AcceptInvitation />;
-  if (path === "/reset-password") return <ResetPassword />;
-  return <WorkspaceApp />;
+  const page =
+    path === "/accept-invitation" ? <AcceptInvitation />
+    : path === "/reset-password" ? <ResetPassword />
+    : <WorkspaceApp />;
+  return (
+    <>
+      <ConnectionBanner />
+      {page}
+    </>
+  );
 }
 
 //demo
@@ -25,6 +35,8 @@ export default function App() {
 // }
 
 function WorkspaceApp() {
+  const online = useOnlineStatus();
+  const [showPortalSkeleton] = useState(hasStoredSession);
   const [session, setSession] = useState(null);
   const [appData, setAppData] = useState(null);
   const [loadError, setLoadError] = useState("");
@@ -62,7 +74,8 @@ function WorkspaceApp() {
       });
   }, []);
 
-  if (!appData) return <WorkspaceLoader />;
+  if (!appData) return showPortalSkeleton ? <PortalSkeleton /> : <LoginSkeleton />;
+  if (loadError && !online) return <OfflineScreen />;
   if (loadError && !session)
     return (
       <WorkspaceError
@@ -89,19 +102,6 @@ function WorkspaceApp() {
       promotions={appData.promotions}
       storeProfile={appData.storeProfile}
     />
-  );
-}
-
-function WorkspaceLoader() {
-  return (
-    <div
-      className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 text-slate-600"
-      role="status"
-      aria-live="polite"
-    >
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-blue-500" />
-      <span className="text-sm font-medium">Loading</span>
-    </div>
   );
 }
 

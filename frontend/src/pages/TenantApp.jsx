@@ -1,9 +1,11 @@
+//demo only
+
 import { useEffect, useState } from "react";
 import { LayoutDashboard, Store, Tag, BarChart3, LogOut } from "lucide-react";
 import { Dashboard } from "../tenant-tabs/Dashboard";
 import { StoreProfile } from "../tenant-tabs/StoreProfile";
 import { Promotions } from "../tenant-tabs/Promotions";
-import { Analytics } from "../tenant-tabs/Analytics";
+import { Analytics } from "../tenant-tabs/InsightsPage";
 import { ProfileSettings } from "../tenant-tabs/ProfileSettings";
 import { Logo } from "../tenant-tabs/shared";
 

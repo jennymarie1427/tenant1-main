@@ -33,7 +33,7 @@ export async function loadPromotions(storeId) {
 // demographics and promotion email metrics for the last `days` days (7, 30 or 90).
 export async function loadStoreAnalytics(storeId, days = 7) {
   if (!supabase || !storeId) throw new Error("Analytics are not available.");
-  const { data, error } = await supabase.rpc("get_my_store_analytics", {
+  const { data, error } = await supabase.rpc("get_my_store_insights", {
     p_store: storeId,
     p_days: days,
   });

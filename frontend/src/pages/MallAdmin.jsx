@@ -222,7 +222,7 @@ function AreaVisits() {
   const line = smooth(pts);
   return (
     <Frame ticks={[0, 600, 1200, 1800, 2400]} max={max} xLabels={VISIT_LABELS}>
-      <div className="absolute inset-0 transition-[clip-path] duration-[1400ms] ease-out" style={reveal(on)}>
+      <div className="absolute inset-0 transition-[clip-path] duration-1400 ease-out" style={reveal(on)}>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible">
           <defs>
             <linearGradient id="visitFill" x1="0" y1="0" x2="0" y2="1">
@@ -244,7 +244,7 @@ function DotLine({ data, max, ticks, color, labels, rotate, height, smoothLine }
   const d = smoothLine ? smooth(pts) : "M" + pts.map((p) => p.join(",")).join(" L");
   return (
     <Frame ticks={ticks} max={max} xLabels={labels} rotate={rotate} height={height}>
-      <div className="absolute inset-0 transition-[clip-path] duration-[1400ms] ease-out" style={reveal(on)}>
+      <div className="absolute inset-0 transition-[clip-path] duration-1400 ease-out" style={reveal(on)}>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible">
           <path d={d} fill="none" stroke={color} strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
         </svg>

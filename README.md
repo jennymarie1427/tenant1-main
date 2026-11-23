@@ -10,10 +10,11 @@ Tenant dashboard for NavAR: store profile, promotions and analytics. Built with 
 ## Quick start
 
 ```bash
+# Installs the frontend and backend (npm workspaces)
 npm install
 
 # Frontend settings
-cp .env.example .env.local
+cp frontend/.env.example frontend/.env.local
 
 # Backend settings
 cp backend/.env.example backend/.env
@@ -28,15 +29,15 @@ On Windows PowerShell, use `Copy-Item` in place of `cp`.
 
 ### Demo mode
 
-If `.env.local` has no Supabase values, the app falls back to local demo data, so you can preview the dashboards without any setup.
+If `frontend/.env.local` has no Supabase values, the app falls back to local demo data, so you can preview the dashboards without any setup.
 
 ## Environment variables
 
 | File | Variable | What it is |
 | --- | --- | --- |
-| `.env.local` | `VITE_SUPABASE_URL` | Your Supabase project URL |
-| `.env.local` | `VITE_SUPABASE_ANON_KEY` | Supabase **anon/public** key |
-| `.env.local` | `VITE_ACCOUNT_ACCESS_API_URL` | Mall Admin API (default `http://localhost:3001`) |
+| `frontend/.env.local` | `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `frontend/.env.local` | `VITE_SUPABASE_ANON_KEY` | Supabase **anon/public** key |
+| `frontend/.env.local` | `VITE_ACCOUNT_ACCESS_API_URL` | Mall Admin API (default `http://localhost:3001`) |
 | `backend/.env` | `PORT` | Backend port (default `3002`) |
 | `backend/.env` | `FRONTEND_ORIGIN` | Allowed frontend origin (default `http://localhost:5175`) |
 | `backend/.env` | `SUPABASE_URL` | Same Supabase project URL as the frontend |
@@ -62,29 +63,41 @@ Real `.env` / `.env.local` files are gitignored. Only the `.env.example` templat
 | `npm run dev` | Frontend only |
 | `npm run dev:backend` | Backend only (restarts on changes) |
 | `npm test` | Frontend + backend tests |
-| `npm run build` | Production build into `dist/` |
+| `npm run build` | Production build into `frontend/dist/` |
 | `npm run preview` | Serve the production build |
-| `npm run lint` | ESLint |
+| `npm run lint` | ESLint (frontend + backend) |
+
+Run every command from the project root.
 
 ## Project structure
 
 ```
-├── backend/            Node.js API (built-in modules only, no npm packages)
+├── frontend/             React + Vite app (the tenant portal)
+│   ├── src/
+│   │   ├── App.jsx       Routing between login, invitations and dashboards
+│   │   ├── pages/        Full-screen pages (Login, Tenant, MallAdmin, SuperAdmin, …)
+│   │   ├── tenant-tabs/  Tabs inside the tenant dashboard + shared UI pieces
+│   │   ├── components/   Reusable components
+│   │   ├── lib/          Supabase client, API calls, data loading
+│   │   └── styles/
+│   ├── public/           Static files served as-is (logos, images)
+│   ├── test/             Frontend unit tests (node:test)
+│   ├── index.html
+│   ├── vite.config.js
+│   └── .env.example      Copy to .env.local
+├── backend/              Node.js API (built-in modules only, no npm packages)
 │   ├── server.js
-│   └── security.cjs
-├── public/             Static files served as-is (logos, images)
-├── src/
-│   ├── App.jsx         Routing between login, invitations and dashboards
-│   ├── pages/          Full-screen pages (Login, Tenant, MallAdmin, SuperAdmin, …)
-│   ├── tenant-tabs/    Tabs inside the tenant dashboard + shared UI pieces
-│   ├── components/     Reusable components
-│   ├── lib/            Supabase client, API calls, data loading
-│   └── styles/
-└── test/               Frontend unit tests (node:test)
+│   ├── security.cjs
+│   └── .env.example      Copy to .env
+├── supabase/
+│   ├── migrations/       Database changes applied to the NavAR project
+│   └── functions/        Edge functions (promotion emails, unsubscribe)
+├── eslint.config.js
+└── package.json          Workspace root: shared scripts and tooling
 ```
 
 ## Supabase setup
 
-The app reads `app_user` and `promotions` through `src/lib/appData.js`. Each `app_user` row needs `user_role`, `user_name` and `user_auth_user_id`. `user_auth_user_id` must match the UUID in `auth.users`. Supported roles are `super_admin`, `mall_admin` and `tenant`.
+The app reads `app_user` and `promotions` through `frontend/src/lib/appData.js`. Each `app_user` row needs `user_role`, `user_name` and `user_auth_user_id`. `user_auth_user_id` must match the UUID in `auth.users`. Supported roles are `super_admin`, `mall_admin` and `tenant`.
 
 Authenticated data reads go through the backend with the signed-in user's token, so **Row Level Security must be enabled** on your tables. Login, password changes and profile updates use the browser Supabase client.
