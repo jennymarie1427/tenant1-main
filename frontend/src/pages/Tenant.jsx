@@ -5,6 +5,7 @@ import {
   Tag,
   BarChart3,
   LogOut,
+  MapPin,
 } from "lucide-react";
 import { Dashboard } from "../tenant-tabs/Dashboard";
 import { StoreProfile } from "../tenant-tabs/StoreProfile";
@@ -123,9 +124,15 @@ export default function Tenant({
   return (
     <div className="tenant-portal flex min-h-screen bg-slate-50 text-gray-900">
       <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col bg-sky-100/70">
-        <p className="border-b border-sky-200 px-6 py-5 text-xl font-semibold text-slate-800">
-          Tenant Portal
-        </p>
+        <div className="border-b border-sky-200 px-6 py-5">
+          <p className="text-xl font-semibold text-slate-800">Tenant Portal</p>
+          {profile?.mallName && (
+            <p className="mt-1 flex items-start gap-1.5 text-sm text-slate-600" title={profile.mallName}>
+              <MapPin size={15} className="mt-0.5 shrink-0 text-sky-600" />
+              <span>{profile.mallName}</span>
+            </p>
+          )}
+        </div>
         <nav className="flex-1 space-y-1 p-4">
           {NAV.map(([n, I]) => (
             <button

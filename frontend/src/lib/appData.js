@@ -137,6 +137,7 @@ export async function loadAppData() {
         role: "tenant",
         name: store?.store_name || tenant.tenant_name,
         subtitle: "Tenant Account",
+        mallName: storeProfile.mall?.mall_name || "",
         userId: identity.user_auth_user_id,
         userName: tenant.tenant_name,
         userEmail: identity.user_email,
