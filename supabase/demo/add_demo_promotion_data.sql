@@ -52,18 +52,19 @@ on conflict (user_id) do update set notifpref_prom_alerts = false;
 
 -- 2. Emails "sent" (Denim Days to all 6, Black Friday Weekend to 5),
 --    a few minutes after each promotion's real email blast.
--- visit_at: when the visit happens, as a fraction of the time between the email
--- and now (so visits always come after the email and are never in the future).
-create temp table demo_plan (promo_title text, n int, opened boolean, visit_at numeric) on commit drop;
+-- visit_at: the time of day (Philippine time) of the visit, within store hours
+-- (10 AM - 9 PM). It's on the day of the email, or the next day if the email
+-- went out after that time, so visits always come after the email.
+create temp table demo_plan (promo_title text, n int, opened boolean, visit_at time) on commit drop;
 insert into demo_plan values
-  ('Denim Days', 1, true,  0.30),
-  ('Denim Days', 2, true,  0.55),
-  ('Denim Days', 3, true,  0.80),
+  ('Denim Days', 1, true,  '12:15'),
+  ('Denim Days', 2, true,  '13:30'),
+  ('Denim Days', 3, true,  '15:20'),
   ('Denim Days', 4, true,  null),
   ('Denim Days', 5, false, null),
   ('Denim Days', 6, false, null),
-  ('Black Friday Weekend', 1, true,  0.45),
-  ('Black Friday Weekend', 4, true,  0.70),
+  ('Black Friday Weekend', 1, true,  '10:40'),
+  ('Black Friday Weekend', 4, true,  '17:45'),
   ('Black Friday Weekend', 5, true,  null),
   ('Black Friday Weekend', 2, false, null),
   ('Black Friday Weekend', 6, false, null);
@@ -89,14 +90,17 @@ select least(ds.sent_at + interval '20 minutes', now()), ds.promotion_id, ds.use
 from demo_sends ds where ds.opened
 on conflict do nothing;
 
--- 4. Navigation to Vista Apparel after the email.
+-- 4. Navigation to Vista Apparel after the email, during store hours.
 insert into public.navigation_session (navsesh_start_time, navsesh_arrived_time, navsesh_date,
   navsesh_is_completed, navsesh_is_emergency, user_id, mall_id, store_id)
 select t.start_at, t.start_at + interval '6 minutes', (t.start_at at time zone 'Asia/Manila')::date,
   true, false, ds.user_id, ds.mall_id, ds.store_id
 from demo_sends ds
-cross join lateral (select ds.sent_at + (now() - interval '1 minute' - ds.sent_at) * ds.visit_at as start_at) t
-where ds.visit_at is not null and ds.sent_at < now() - interval '2 minutes';
+cross join lateral (select (ds.sent_at at time zone 'Asia/Manila')::date + ds.visit_at as same_day) d
+cross join lateral (select (case when (d.same_day at time zone 'Asia/Manila') > ds.sent_at
+                                 then d.same_day else d.same_day + interval '1 day' end)
+                           at time zone 'Asia/Manila' as start_at) t
+where ds.visit_at is not null;
 
 select (select count(*) from demo_ids) as demo_shoppers,
        (select count(*) from demo_sends) as demo_emails,
