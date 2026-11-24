@@ -223,6 +223,8 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
   const [zoomImage, setZoomImage] = useState(null);
   const set = (k, v) => setF((c) => ({ ...c, [k]: v }));
   const ok = f.title.trim() && f.start && f.end;
+  // An already-ended promotion can't be emailed (the server refuses it too).
+  const ended = Boolean(f.end) && f.end < toIso(new Date());
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 p-4 backdrop-blur-sm">
       <div
@@ -301,11 +303,12 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
             <div>
               <p className="font-medium">Notify Registered Users</p>
               <p className="text-sm text-gray-500">
-                Email this promotion to NavAR app users who have visited your
-                mall.
+                {ended
+                  ? "This promotion's end date has passed, so it can't be emailed."
+                  : "Email this promotion to NavAR app users who have visited your mall."}
               </p>
             </div>
-            <Toggle on={f.notify} onChange={(v) => set("notify", v)} />
+            {!ended && <Toggle on={f.notify} onChange={(v) => set("notify", v)} />}
           </div>
         )}
         <div className="mt-5 flex justify-end gap-3">
@@ -313,7 +316,7 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
             Cancel
           </Btn>
           <Btn
-            onClick={() => ok && onSave(f)}
+            onClick={() => ok && onSave(ended ? { ...f, notify: false } : f)}
             className={`py-2.5! ${ok ? "" : "opacity-50"}`}
             disabled={saving}
           >
