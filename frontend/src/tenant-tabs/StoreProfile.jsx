@@ -8,7 +8,6 @@ import {
   Logo,
   LogoButton,
   SectionHeading,
-  Chip,
   ChipPicker,
   Head,
   AlertModal,
@@ -28,7 +27,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
   const [openDays, setOpenDays] = useState(days.slice(0, 6));
   const [from, setFrom] = useState(data.openFrom || "");
   const [to, setTo] = useState(data.openTo || "");
-  const [custom, setCustom] = useState(false);
   const [perDay, setPerDay] = useState({});
   const [category, setCategory] = useState(Object.keys(categories)[0] || "");
   const [payOptions, setPayOptions] = useState(paymentOptions);
@@ -100,17 +98,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
         ]),
       ),
     );
-    setCustom(
-      hours.some((hour) => {
-        const open = hour.opthrs_open_time?.slice(0, 5) || "";
-        const close = hour.opthrs_close_time?.slice(0, 5) || "";
-        return (
-          !hour.opthrs_is_closed &&
-          (open !== nextHours.opthrs_open_time?.slice(0, 5) ||
-            close !== nextHours.opthrs_close_time?.slice(0, 5))
-        );
-      }),
-    );
     setPayOptions([
       ...new Set(methods.map((method) => method.store_pm_name).filter(Boolean)),
     ]);
@@ -119,7 +106,6 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
 
   const flip = (list, set, v) =>
     set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
-  const chosen = days.filter((d) => openDays.includes(d));
   const closed = days.filter((d) => !openDays.includes(d));
   const setOverride = (d, k, v) =>
     setPerDay({ ...perDay, [d]: { from, to, ...perDay[d], [k]: v } });
@@ -242,106 +228,50 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
           className="mb-4"
         />
         <SectionHeading>Operating Hours</SectionHeading>
-        <p className="mb-2 text-sm font-medium">1. Which days are you open?</p>
-        <div className="mb-5 flex flex-wrap gap-2">
-          {days.map((d) => (
-            <Chip
-              key={d}
-              on={openDays.includes(d)}
-              onClick={() => flip(openDays, setOpenDays, d)}
-            >
-              {d.slice(0, 3)}
-            </Chip>
-          ))}
-        </div>
-        <p className="mb-2 text-sm font-medium">
-          2. What time do you open and close?
-        </p>
-        {chosen.length === 0 ? (
-          <p className="text-sm text-gray-400">
-            Pick at least one open day first.
-          </p>
-        ) : (
-          <>
-            <div className="flex flex-wrap items-center gap-3 text-sm">
-              <span className="text-gray-500">Default opens</span>
-              <input
-                type="time"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className={timeBox}
-              />
-              <span className="text-gray-500">closes</span>
-              <input
-                type="time"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className={timeBox}
-              />
-              <span className="text-gray-400">(used for all open days)</span>
-            </div>
-            <label className="mt-4 flex items-center gap-3 text-sm">
-              <Toggle on={custom} onChange={setCustom} />
-              Set different hours for specific days
-            </label>
-            {custom && (
-              <div className="mt-3 space-y-2 rounded-lg bg-slate-50 p-4">
-                {chosen.map((d) => {
-                  const h = { from, to, ...perDay[d] };
-                  return (
-                    <div key={d} className="flex items-center gap-3 text-sm">
-                      <span className="w-24">{d}</span>
-                      <input
-                        type="time"
-                        value={h.from}
-                        onChange={(e) => setOverride(d, "from", e.target.value)}
-                        className={timeBox}
-                      />
-                      <span className="text-gray-400">to</span>
-                      <input
-                        type="time"
-                        value={h.to}
-                        onChange={(e) => setOverride(d, "to", e.target.value)}
-                        className={timeBox}
-                      />
-                    </div>
-                  );
-                })}
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-gray-400">
+            <span className="w-24">Day</span>
+            <span className="w-24">Closed / Open</span>
+            <span>Hours</span>
+          </div>
+          {days.map((d) => {
+            const isOpen = openDays.includes(d);
+            const h = { from, to, ...perDay[d] };
+            return (
+              <div key={d} className="flex min-h-10 items-center gap-3">
+                <span className="w-24">{d}</span>
+                <span className="flex w-24 items-center gap-2">
+                  <Toggle
+                    on={isOpen}
+                    onChange={() => flip(openDays, setOpenDays, d)}
+                  />
+                  <span className={isOpen ? "text-[#5094fb]" : "text-gray-400"}>
+                    {isOpen ? "Open" : "Closed"}
+                  </span>
+                </span>
+                {isOpen ? (
+                  <>
+                    <input
+                      type="time"
+                      value={h.from}
+                      onChange={(e) => setOverride(d, "from", e.target.value)}
+                      className={timeBox}
+                    />
+                    <span className="text-gray-400">to</span>
+                    <input
+                      type="time"
+                      value={h.to}
+                      onChange={(e) => setOverride(d, "to", e.target.value)}
+                      className={timeBox}
+                    />
+                  </>
+                ) : (
+                  <span className="text-gray-400">—</span>
+                )}
               </div>
-            )}
-            {!custom &&
-              chosen.map((d) => (
-                <div key={d} className="mt-3 flex items-center gap-3 text-sm">
-                  <span className="w-24">{d}</span>
-                  <input
-                    type="time"
-                    value={from}
-                    onChange={(e) => {
-                      setFrom(e.target.value);
-                      setPerDay((current) => ({
-                        ...current,
-                        [d]: { ...current[d], from: e.target.value },
-                      }));
-                    }}
-                    className={timeBox}
-                  />
-                  <span className="text-gray-400">to</span>
-                  <input
-                    type="time"
-                    value={to}
-                    onChange={(e) => {
-                      setTo(e.target.value);
-                      setPerDay((current) => ({
-                        ...current,
-                        [d]: { ...current[d], to: e.target.value },
-                      }));
-                    }}
-                    className={timeBox}
-                  />
-                </div>
-              ))}
-          </>
-        )}
+            );
+          })}
+        </div>
         <p className="mt-3 text-sm text-gray-500">
           {closed.length ? `Closed on ${closed.join(", ")}` : "Open every day"}
         </p>
