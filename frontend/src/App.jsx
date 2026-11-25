@@ -4,7 +4,6 @@ import AcceptInvitation from "./pages/AcceptInvitation";
 import { useEffect, useState } from "react";
 import Login from "./pages/Login";
 import Tenant from "./pages/Tenant";
-//import TenantApp from "./pages/TenantApp";
 import { getCurrentSession, loadAppData, signOut } from "./lib/appData";
 import { hasStoredSession, useOnlineStatus } from "./lib/useOnlineStatus";
 import { ConnectionBanner, OfflineScreen } from "./components/common/ConnectionStatus";
@@ -33,12 +32,6 @@ export default function App() {
     </>
   );
 }
-
-//demo
-
-// export default function App() {
-//   return <TenantApp />;
-// }
 
 function WorkspaceApp() {
   const online = useOnlineStatus();
