@@ -18,9 +18,7 @@ import { smooth, useMounted } from "./utils";
 
 const BLUE = "bg-[#5094fb]";
 
-
-
-/* shared UI */
+// Shared UI 
 export const Card = ({ className = "", children }) => (
   <div className={`rounded-2xl border border-gray-200 bg-white ${className}`}>
     {children}
