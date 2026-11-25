@@ -6,6 +6,7 @@ import {
   verifyInvitationLink,
   invitationStorageKey,
 } from "../lib/invitationLink";
+// Accept invitation page
 export default function AcceptInvitation() {
   const [link] = useState(() =>
     readInvitationLink(window.location, sessionStorage),

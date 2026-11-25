@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 
+// Read table data from backend API
 export async function readData(table, params = {}) {
   const { data, error } = await supabase.auth.getSession();
   if (error) throw error;

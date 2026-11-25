@@ -1,4 +1,4 @@
-// Keep copies in all four backends synchronized. Never trust forwarded headers by default.
+// Request security: HTTPS, CORS and rate limiting
 const { randomUUID, createHash, randomBytes } = require("node:crypto");
 function createSecurity(env = process.env, log = (line) => console.info(line)) {
   const trusted = new Set(
@@ -50,7 +50,7 @@ function createSecurity(env = process.env, log = (line) => console.info(line)) {
     const now = Date.now();
     for (const [key, item] of buckets)
       if (item.until <= now) buckets.delete(key);
-    // Socket peer is deliberate. Apply per-client rate limits at the trusted ingress too.
+    // Rate limit per socket address
     let bucket = buckets.get(address);
     if (!bucket) {
       if (buckets.size >= 10000) return reject(429, "Too many requests.");
@@ -67,6 +67,7 @@ function createSecurity(env = process.env, log = (line) => console.info(line)) {
     return true;
   };
 }
+// Require exact HTTPS frontend origins in production
 function assertProductionOrigins(env, origins) {
   if (env.NODE_ENV !== "production") return;
   if (

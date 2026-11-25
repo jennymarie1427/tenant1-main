@@ -1,8 +1,4 @@
-// promotion-unsubscribe: target of the "Unsubscribe" link in promotion emails.
-// Turns off promotion emails (notif_preference.notifpref_prom_alerts) for the
-// user behind the token. Deployed with JWT verification off, because the link
-// is opened from an email client without a login. GET = link click,
-// POST = one-click unsubscribe from the email client (List-Unsubscribe-Post).
+// promotion-unsubscribe: turn off promotion emails
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
@@ -12,7 +8,6 @@ const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Supabase serves function responses as plain text unless a custom domain is set up.
 const reply = (message: string, status = 200) =>
   new Response(message, { status, headers: { "Content-Type": "text/plain; charset=utf-8" } });
 

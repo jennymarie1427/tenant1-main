@@ -9,7 +9,7 @@ try {
     atob((key || "").split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
   ).role;
 } catch {
-  // Not a JWT (e.g. a publishable key), so there is no role to inspect.
+  // not a JWT
 }
 if ((key || "").startsWith("sb_secret_") || keyRole === "service_role")
   throw new Error("Only a public Supabase key may be used in the browser.");

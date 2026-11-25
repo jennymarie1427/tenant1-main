@@ -1,10 +1,10 @@
-// Skeleton placeholders: soft grey blocks shaped like the real content that
-// pulse while data loads.
 
+// Loading placeholder block
 export function Skeleton({ className = "" }) {
   return <div className={`animate-pulse rounded-lg bg-slate-200/80 ${className}`} />;
 }
 
+// Stat cards placeholder
 export function StatCardsSkeleton({ count = 3 }) {
   return (
     <div className={`mb-6 grid gap-6 ${count === 4 ? "grid-cols-4" : "grid-cols-3"}`} aria-hidden="true">
@@ -19,7 +19,7 @@ export function StatCardsSkeleton({ count = 3 }) {
   );
 }
 
-// A placeholder chart: y-axis ticks plus bars of varying heights.
+// Chart placeholder
 export function ChartSkeleton({ height = "h-64" }) {
   const bars = [35, 55, 25, 70, 45, 85, 30];
   return (
@@ -35,6 +35,7 @@ export function ChartSkeleton({ height = "h-64" }) {
   );
 }
 
+// List placeholder
 export function ListSkeleton({ rows = 2 }) {
   return (
     <div className="space-y-4" aria-hidden="true">
@@ -53,7 +54,7 @@ export function ListSkeleton({ rows = 2 }) {
   );
 }
 
-// Whole tenant portal while the signed-in workspace loads.
+// Portal placeholder
 export function PortalSkeleton() {
   return (
     <div className="flex min-h-screen bg-slate-50" role="status" aria-live="polite" aria-label="Loading your store">
@@ -101,7 +102,7 @@ export function PortalSkeleton() {
   );
 }
 
-// Login card while the app checks whether you're signed in.
+// Login placeholder
 export function LoginSkeleton() {
   return (
     <div

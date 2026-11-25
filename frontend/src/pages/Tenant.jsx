@@ -31,6 +31,7 @@ const PAGE_SLUGS = {
 const PAGE_NAMES = Object.fromEntries(
   Object.entries(PAGE_SLUGS).map(([name, slug]) => [slug, name]),
 );
+// Current page from URL
 function readPage() {
   return (
     PAGE_NAMES[window.location.pathname.replace(/^\/+|\/+$/g, "")] ||
@@ -38,6 +39,7 @@ function readPage() {
   );
 }
 
+// Tenant portal layout
 export default function Tenant({
   onLogout,
   profile,

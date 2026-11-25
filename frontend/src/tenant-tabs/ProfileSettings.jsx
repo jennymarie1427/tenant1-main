@@ -11,6 +11,7 @@ import {
 } from "./shared";
 import { changePassword, updateTenantProfile } from "../lib/appData";
 
+// Profile settings tab
 export function ProfileSettings({ logo, profile }) {
   const [form, setForm] = useState(() => ({
     accountName: profile?.userName || "",

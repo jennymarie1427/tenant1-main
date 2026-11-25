@@ -7,6 +7,7 @@ import { SavedCopyNote } from "../components/common/ConnectionStatus";
 
 const EMPTY_VISITS = { data: [], max: 0, ticks: [], labels: [] };
 
+// Dashboard tab
 export function Dashboard({ promos, go, data, storeId }) {
   const { view, loading, error, savedAt } = useStoreInsights(storeId, 7);
   const stats = view?.dashboardStats || data?.stats || [];

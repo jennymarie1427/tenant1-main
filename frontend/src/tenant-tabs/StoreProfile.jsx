@@ -19,6 +19,7 @@ import {
 } from "./utils";
 import { saveStoreProfile } from "../lib/appData";
 
+// Store profile tab
 export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
   const days = data.days?.length ? data.days : STORE_PROFILE_DAYS;
   const categories = data.categories || EMPTY_CATEGORIES;

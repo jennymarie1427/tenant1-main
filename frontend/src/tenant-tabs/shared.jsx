@@ -20,13 +20,14 @@ const BLUE = "bg-[#5094fb]";
 
 
 
-/* small shared bits */
+/* shared UI */
 export const Card = ({ className = "", children }) => (
   <div className={`rounded-2xl border border-gray-200 bg-white ${className}`}>
     {children}
   </div>
 );
 
+// Alert modal
 export function AlertModal({ message, variant = "error", onClose }) {
   if (!message) return null;
   return (
@@ -109,6 +110,7 @@ export const Btn = ({
   </button>
 );
 
+// Text field
 export function Field({ label, className = "", type = "text", ...rest }) {
   return (
     <label className={`block ${className}`}>
@@ -122,6 +124,7 @@ export function Field({ label, className = "", type = "text", ...rest }) {
   );
 }
 
+// Password field
 export function PasswordField({ label, value, onChange, autoComplete }) {
   const [show, setShow] = useState(false);
   const fieldName = label.toLowerCase().replace(/\s+/g, "-");
@@ -148,6 +151,7 @@ export function PasswordField({ label, value, onChange, autoComplete }) {
   );
 }
 
+// Toggle switch
 export function Toggle({ on, onChange }) {
   return (
     <button
@@ -170,6 +174,7 @@ export const Logo = ({ src = "/store-logo.png", size = "h-24 w-24" }) => (
 );
 
 
+// Logo upload button
 export function LogoButton({ setLogo, onFile, children }) {
   return (
     <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium">
@@ -213,6 +218,7 @@ export const Head = ({ title, sub, right }) => {
   );
 };
 
+// Styled select
 export function StyledSelect({
   value,
   options = [],
@@ -260,6 +266,7 @@ export const SectionHeading = ({ children }) => (
 
 /* charts */
 
+// Chart frame with axes
 export function Frame({ ticks, max, labels, h = "h-64", children, legend }) {
   const safeMax = max > 0 ? max : 1;
   return (
@@ -326,6 +333,7 @@ export const Bar = ({
   </div>
 );
 
+// Line chart
 export function LineDots({ data, max, ticks, labels, unit = "visits" }) {
   const on = useMounted();
   if (!data?.length)
@@ -335,8 +343,7 @@ export function LineDots({ data, max, ticks, labels, unit = "visits" }) {
       </p>
     );
   const n = data.length;
-  // Each point sits at the centre of its slot, directly above its x-axis label
-  // (the labels below are evenly spaced, centred flex items).
+  // Center each point above its label
   const safeMax = max > 0 ? max : 1;
   const pts = data.map((v, i) => [((i + 0.5) / n) * 100, 100 - (v / safeMax) * 100]);
   return (
@@ -383,6 +390,7 @@ export function LineDots({ data, max, ticks, labels, unit = "visits" }) {
   );
 }
 
+// Pie chart
 export function Pie({ slices }) {
   const on = useMounted();
   const [hover, setHover] = useState(null);
@@ -487,6 +495,7 @@ export const PromoImg = ({ src, size = "h-14 w-14" }) =>
   );
 
 /* data */
+// Selectable chip
 export function Chip({ on, onClick, children }) {
   return (
     <button
@@ -500,6 +509,7 @@ export function Chip({ on, onClick, children }) {
   );
 }
 
+// Chip picker
 export function ChipPicker({
   options,
   setOptions,

@@ -1,18 +1,6 @@
-// notify-promotion: emails a new promotion to registered mobile users who have
-// visited the store's mall. Called by the tenant app after a promotion is
-// created with "Notify Registered Users" turned on.
-//
-// Request body:
-//   { "promotion_id": 123 }                     send to eligible visitors (tenant login required)
-//   { "mode": "health" }                        check SMTP secrets + Gmail login, sends nothing
-//   { "mode": "preview", "promotion_id": 123 }  send one sample to the sending Gmail account only
-//
-// Secrets (Supabase dashboard -> Edge Functions -> Secrets):
-//   SMTP_HOST, SMTP_PORT (465), SMTP_USER, SMTP_PASS, SMTP_FROM
-// Edge Functions block outgoing ports 25 and 587, so SMTP must use 465 (SSL).
-//
-// Each real email carries an invisible 1x1 image from the promotion-open
-// function, which counts the open once per recipient (see openPixelUrl below).
+// notify-promotion: email new promotion to mall visitors
+// Body: { promotion_id } | { mode: "health" } | { mode: "preview", promotion_id }
+// Secrets: SMTP_HOST, SMTP_PORT (465), SMTP_USER, SMTP_PASS, SMTP_FROM
 
 // @ts-ignore - npm specifiers are resolved by Deno in Supabase Edge Functions.
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
@@ -55,6 +43,7 @@ type Promotion = {
   image_base64: string | null;
 };
 
+// SMTP settings
 function smtpSetup() {
   const missing = SMTP_KEYS.filter((key) => !Deno.env.get(key));
   const port = Number(Deno.env.get("SMTP_PORT") || 0);
@@ -64,6 +53,7 @@ function smtpSetup() {
   return { missing, problem, port };
 }
 
+// Create SMTP transport
 function createTransport(port: number) {
   return nodemailer.createTransport({
     host: Deno.env.get("SMTP_HOST"),
@@ -86,7 +76,7 @@ const escapeHtml = (value: unknown) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-// PostgREST returns bytea columns as hex text like "\x89504e47...".
+// Convert bytea hex to base64
 function byteaHexToBase64(value: string | null) {
   if (!value || !value.startsWith("\\x")) return null;
   const hex = value.slice(2);
@@ -98,6 +88,7 @@ function byteaHexToBase64(value: string | null) {
   return btoa(binary);
 }
 
+// Detect image type
 function imageType(base64: string) {
   if (base64.startsWith("/9j/")) return { ext: "jpg", type: "image/jpeg" };
   if (base64.startsWith("R0lG")) return { ext: "gif", type: "image/gif" };
@@ -111,20 +102,21 @@ type StoreLocation = {
   floor_num?: number | null;
 } | null;
 
-// "Jenny Marie Itaas" -> "Jenny". Falls back to a neutral greeting.
+// First name for greeting
 function firstName(name: string | null | undefined) {
   const first = String(name ?? "").trim().split(/\s+/)[0] ?? "";
   if (!first || first.includes("@")) return "";
   return first.charAt(0).toUpperCase() + first.slice(1);
 }
 
+// Parse date
 function parseDate(value: string | null) {
   if (!value) return null;
   const date = new Date(`${String(value).slice(0, 10)}T00:00:00Z`);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-// "May 1 – 8, 2027", "May 28 – Jun 3, 2027", "Dec 28, 2026 – Jan 3, 2027"
+// Format promotion date range
 function formatDateRange(startValue: string | null, endValue: string | null) {
   const start = parseDate(startValue);
   const end = parseDate(endValue);
@@ -143,7 +135,7 @@ function formatDateRange(startValue: string | null, endValue: string | null) {
   return only ? fmt(only, { month: "short", day: "numeric", year: "numeric" }) : "";
 }
 
-// "Second Floor · Unit ST - 201"
+// Format store location
 function formatLocation(location: StoreLocation) {
   if (!location) return "";
   const floor = location.floor_label || (location.floor_num != null ? `Floor ${location.floor_num}` : "");
@@ -151,6 +143,7 @@ function formatLocation(location: StoreLocation) {
   return [floor, unit].filter(Boolean).join(" · ");
 }
 
+// Build email HTML
 function buildEmail(opts: {
   promotion: Promotion;
   storeName: string;
@@ -165,7 +158,7 @@ function buildEmail(opts: {
   const greeting = name ? `Hi ${name}!` : "Hi there!";
   const dates = formatDateRange(promotion.start, promotion.end);
   const where = formatLocation(location ?? null);
-  // Plain, descriptive subject: no ALL CAPS, emoji or "!!!", which spam filters penalise.
+  // Plain subject (avoid spam filters)
   const subject = `${storeName} at ${mallName}: ${promotion.title}`.slice(0, 250);
   const preheader = [dates && `Valid ${dates}`, where && `Find ${storeName} on the ${where}`]
     .filter(Boolean)
@@ -271,27 +264,29 @@ function buildEmail(opts: {
           cid: "promo-image",
         }]
       : [],
-    // One-click unsubscribe headers: Gmail and Yahoo expect these on bulk mail.
+    // One-click unsubscribe headers
     headers: unsubscribeUrl
       ? { "List-Unsubscribe": `<${unsubscribeUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" }
       : undefined,
   };
 }
 
+// Unsubscribe link URL
 const unsubscribeUrl = (token: string) =>
   `${SUPABASE_URL}/functions/v1/promotion-unsubscribe?token=${encodeURIComponent(token)}`;
 
-// Invisible image that counts an open (promotion-open). Only real sends get
-// one; previews don't, so they never count.
+// Open tracking pixel URL
 const openPixelUrl = (promotionId: number, token: string) =>
   `${SUPABASE_URL}/functions/v1/promotion-open?p=${promotionId}&t=${encodeURIComponent(token)}`;
 
+// Rate limit by key
 async function throttle(key: string, seconds: number) {
   const { data, error } = await admin.rpc("edge_throttle", { p_key: key, p_seconds: seconds });
   if (error) throw error;
   return data === true;
 }
 
+// Health check
 async function handleHealth() {
   const { missing, problem, port } = smtpSetup();
   const secrets = Object.fromEntries(SMTP_KEYS.map((key) => [key, !missing.includes(key)]));
@@ -309,6 +304,7 @@ async function handleHealth() {
   }
 }
 
+// Load promotion for preview
 async function loadPromotionForPreview(promotionId: number) {
   const { data: promo, error } = await admin
     .from("promotion")
@@ -347,6 +343,7 @@ async function loadPromotionForPreview(promotionId: number) {
   };
 }
 
+// Send preview email
 async function handlePreview(promotionId: number) {
   const { problem, port } = smtpSetup();
   if (problem) return json({ error: problem }, 500);
@@ -374,6 +371,7 @@ async function handlePreview(promotionId: number) {
   }
 }
 
+// Send to all recipients
 async function sendBlast(claim: {
   blast_id: number;
   store_name: string;
@@ -433,6 +431,7 @@ async function sendBlast(claim: {
   }
 }
 
+// Send promotion emails
 async function handleSend(req: Request, promotionId: number) {
   const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   const { data: auth } = await admin.auth.getUser(token);
@@ -453,7 +452,7 @@ async function handleSend(req: Request, promotionId: number) {
   if (!claim?.blast_id || recipients.length === 0)
     return json({ queued: 0, mall_name: claim?.mall_name ?? null });
 
-  // Respond right away; sending continues in the background.
+  // Respond now, send in background
   EdgeRuntime.waitUntil(sendBlast(claim, port, promotionId));
   return json({ queued: recipients.length, mall_name: claim.mall_name });
 }

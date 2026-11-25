@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-// Minimal browser stand-ins for Node.
+// Browser stubs
 const store = new Map();
 globalThis.localStorage = {
   getItem: (k) => (store.has(k) ? store.get(k) : null),
@@ -10,7 +10,7 @@ globalThis.localStorage = {
   key: (i) => [...store.keys()][i] ?? null,
   get length() { return store.size; },
 };
-// Object.keys(localStorage) should list stored keys, like in a browser.
+// Make Object.keys list stored keys
 globalThis.localStorage = new Proxy(globalThis.localStorage, {
   ownKeys: () => [...store.keys()],
   getOwnPropertyDescriptor: (target, k) =>

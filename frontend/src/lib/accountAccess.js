@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 
+// Call account-access API
 export async function accountAccess(action, body) {
   const { data } = await supabase.auth.getSession();
   const base =

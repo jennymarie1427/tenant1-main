@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircle2, CircleAlert, X } from 'lucide-react';
 import './toast.css';
 
+// Auto-hiding toast message
 export default function Toast({ message, variant = 'success', duration = 5000 }) {
   const [visible, setVisible] = useState(true);
   useEffect(() => {

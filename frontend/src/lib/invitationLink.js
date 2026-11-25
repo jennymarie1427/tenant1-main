@@ -1,5 +1,6 @@
 export const invitationStorageKey = "navar-pending-invitation";
 
+// Parse invitation link
 export function readInvitationLink(location, storage) {
   const query = new URLSearchParams(location.search);
   const fragment = new URLSearchParams(location.hash.slice(1));
@@ -15,7 +16,6 @@ export function readInvitationLink(location, storage) {
       callback_error: fragment.get("error") || query.get("error"),
     };
   }
-  // Links sent by the earlier Mailpit/Resend version remain supported.
   if (fragment.get("token_hash")) return Object.fromEntries(fragment);
   try {
     return JSON.parse(storage.getItem(invitationStorageKey) || "null") || {};
@@ -24,6 +24,7 @@ export function readInvitationLink(location, storage) {
   }
 }
 
+// Verify invitation link
 export async function verifyInvitationLink(auth, link) {
   if (link.callback_error)
     throw new Error(
@@ -49,7 +50,7 @@ export async function verifyInvitationLink(auth, link) {
         "This link has expired or was already used. Request another email.",
       );
   } else if (!link.user_id) {
-    // Never silently use the inviting admin's old session for an incomplete email callback.
+    // Do not reuse an existing session
     throw new Error(
       "The email did not return a valid session. Request a new email and check its confirmation link and redirect URL.",
     );

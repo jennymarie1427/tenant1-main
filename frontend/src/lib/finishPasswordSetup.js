@@ -1,4 +1,5 @@
 import { verifyInvitationLink } from "./invitationLink.js";
+// Set password for invited user
 export async function finishPasswordSetup({
   auth,
   link,

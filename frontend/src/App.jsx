@@ -17,8 +17,7 @@ import {
 
 const EMPTY_APP_DATA = { profiles: {}, promotions: [] };
 
-//main app
-
+// App root
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   const page =
@@ -33,13 +32,14 @@ export default function App() {
   );
 }
 
+// Signed-in workspace loader
 function WorkspaceApp() {
   const online = useOnlineStatus();
   const [showPortalSkeleton] = useState(hasStoredSession);
   const [session, setSession] = useState(null);
   const [appData, setAppData] = useState(null);
   const [loadError, setLoadError] = useState("");
-  // When set, the portal is showing the saved offline copy from this time.
+  // Time of offline copy being shown
   const [offlineSavedAt, setOfflineSavedAt] = useState(null);
   const logout = async () => {
     clearSnapshots();
@@ -73,8 +73,7 @@ function WorkspaceApp() {
         });
       })
       .catch((error) => {
-        // Offline mode: a connection problem (not a real error) while a
-        // signed-in copy is saved -> show the store from that copy.
+        // Offline: show saved copy
         const saved = isConnectionError(error) && hasStoredSession() ? loadWorkspaceSnapshot() : null;
         if (saved?.data?.profiles?.tenant) {
           setSession({ role: "tenant", offline: true });
@@ -121,6 +120,7 @@ function WorkspaceApp() {
   );
 }
 
+// Workspace load error screen
 function WorkspaceError({ message, onRetry }) {
   return (
     <div

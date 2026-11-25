@@ -3,11 +3,7 @@ import { loadStoreAnalytics } from "./appData";
 import { buildAnalyticsView } from "./storeInsights";
 import { isConnectionError, loadSnapshot, saveSnapshot } from "./offlineCache";
 
-// Loads store analytics for the Dashboard and Analytics pages.
-// Returns { view, loading, error, savedAt }. While a new range loads, the
-// previous view stays on screen so the charts don't flash empty.
-// Offline mode: each successful load is saved; if a later load fails because
-// of the connection, the saved copy is shown and `savedAt` says when it's from.
+// Load store analytics (falls back to offline copy)
 export function useStoreInsights(storeId, days = 7) {
   const key = storeId ? `${storeId}:${days}` : "";
   const [state, setState] = useState({ key: "", view: null, error: "", savedAt: null });

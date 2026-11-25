@@ -1,12 +1,4 @@
-// promotion-open: invisible 1x1 image at the bottom of promotion emails.
-//
-//   GET /functions/v1/promotion-open?p=<promotion_id>&t=<recipient token>
-//
-// When the recipient's email client loads it, the open is counted once per
-// person per promotion (only if that promotion was emailed to them). It always
-// returns the same transparent GIF, so a bad or repeated request looks the same.
-// Deployed with JWT verification off: the image is loaded by email clients.
-// Opens are an estimate: Apple Mail preloads images and some people block them.
+// promotion-open: email open tracking pixel
 
 // @ts-ignore - npm specifiers are resolved by Deno in Supabase Edge Functions.
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";

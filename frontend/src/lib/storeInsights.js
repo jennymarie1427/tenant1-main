@@ -1,6 +1,4 @@
-// Turns the get_my_store_insights result into the shapes the Dashboard and
-// Analytics charts expect. Pure functions, so they're unit-tested in
-// test/storeInsights.test.js without a database.
+// Store analytics data shaping
 
 export const ANALYTICS_RANGES = [
   { label: "Last 7 days", days: 7 },
@@ -12,7 +10,7 @@ const AGE_GROUPS = ["Under 18", "18-24", "25-34", "35-44", "45-54", "55+"];
 const AGE_COLORS = ["#bfdbfe", "#93c5fd", "#5094fb", "#2563eb", "#1d4ed8", "#1e3a8a"];
 const GENDER_COLORS = { Female: "#f472b6", Male: "#5094fb", Other: "#a78bfa" };
 
-// Round, evenly spaced y-axis ticks for whole-number counts.
+// Y-axis ticks
 export function niceScale(maxValue, steps = 4) {
   const max = Math.max(0, Number(maxValue) || 0);
   if (max === 0) return { max: steps, ticks: [0, 1, 2, 3, 4].slice(0, steps + 1) };
@@ -28,13 +26,13 @@ export function niceScale(maxValue, steps = 4) {
 const parseDay = (value) => new Date(`${String(value).slice(0, 10)}T00:00:00Z`);
 const month = (d) => d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" });
 
-// "Nov 19"
+// Format day
 export function formatDay(value) {
   const d = parseDay(value);
   return `${month(d)} ${d.getUTCDate()}`;
 }
 
-// "Nov 3–9" or "Oct 30–Nov 5"
+// Format date span
 function formatSpan(fromValue, toValue) {
   const from = parseDay(fromValue);
   const to = parseDay(toValue);
@@ -44,8 +42,7 @@ function formatSpan(fromValue, toValue) {
     : `${formatDay(fromValue)}–${formatDay(toValue)}`;
 }
 
-// Daily points for 7 days; 5-day groups for 30 days; weekly groups for 90 days,
-// so the x-axis labels stay readable.
+// Visit chart series
 export function buildVisitSeries(daily = [], rangeDays = 7) {
   const size = rangeDays <= 7 ? 1 : rangeDays <= 30 ? 5 : 7;
   const data = [];
@@ -60,7 +57,7 @@ export function buildVisitSeries(daily = [], rangeDays = 7) {
 
 const hourLabel = (h) => `${h % 12 === 0 ? 12 : h % 12} ${h < 12 ? "AM" : "PM"}`;
 
-// 24 hourly counts -> 12 two-hour bars ("2 PM" covers 2:00–3:59 PM).
+// Peak times (2-hour bars)
 export function buildPeakTimes(hourly = []) {
   const counts = Array.from({ length: 24 }, (_, h) =>
     Number(hourly.find((x) => Number(x.hour) === h)?.visits) || 0,
@@ -77,7 +74,7 @@ export function buildPeakTimes(hourly = []) {
   return { data, labels, tips, ...niceScale(Math.max(0, ...data)) };
 }
 
-// Counts -> [label, percent, color, count] slices; percents add up to 100.
+// Pie slices
 function toSlices(counts, order, colorFor) {
   const entries = order
     .map((label) => [label, Number(counts?.[label]) || 0])
@@ -92,6 +89,7 @@ function toSlices(counts, order, colorFor) {
 
 const visitorsText = (n) => `${n} ${n === 1 ? "visitor" : "visitors"}`;
 
+// Demographic pie slices
 export function buildDemographics(demographics = {}) {
   const age = toSlices(demographics.age, AGE_GROUPS, (l) => AGE_COLORS[AGE_GROUPS.indexOf(l)]);
   const gender = toSlices(demographics.gender, ["Female", "Male", "Other"], (l) => GENDER_COLORS[l]);
@@ -109,7 +107,7 @@ export function buildDemographics(demographics = {}) {
 
 export const formatVisitors = visitorsText;
 
-// Change vs the previous period of the same length, for the stat cards.
+// Change vs previous period
 export function changeText(current, previous, days) {
   if (!previous) return { note: current ? `No visits in the previous ${days} days` : `Last ${days} days` };
   const pct = Math.round(((current - previous) / previous) * 100);
@@ -120,6 +118,7 @@ export function changeText(current, previous, days) {
 
 const stat = (label, value, change) => [label, Number(value || 0).toLocaleString(), change.up, change.note];
 
+// Build full analytics view
 export function buildAnalyticsView(result = {}) {
   const days = result.range_days || 7;
   const totals = result.totals || {};

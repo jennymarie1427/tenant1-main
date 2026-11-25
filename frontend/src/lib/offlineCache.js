@@ -1,9 +1,8 @@
-// Offline mode: keeps a copy of the last data loaded while online, so the
-// tenant portal can still show the store when the connection drops or is too
-// slow (read-only). Stored in this browser only and cleared on sign-out.
+// Offline cache (localStorage)
 
 const PREFIX = "navar.offline.";
 
+// Write to storage
 function write(key, data) {
   try {
     localStorage.setItem(PREFIX + key, JSON.stringify({ savedAt: new Date().toISOString(), data }));
@@ -13,10 +12,12 @@ function write(key, data) {
   }
 }
 
+// Save snapshot
 export function saveSnapshot(key, data) {
   return write(key, data);
 }
 
+// Load snapshot
 export function loadSnapshot(key) {
   try {
     const raw = localStorage.getItem(PREFIX + key);
@@ -26,6 +27,7 @@ export function loadSnapshot(key) {
   }
 }
 
+// Clear all snapshots
 export function clearSnapshots() {
   try {
     Object.keys(localStorage)
@@ -36,8 +38,7 @@ export function clearSnapshots() {
   }
 }
 
-// Images are the largest part of the workspace data. If the full copy doesn't
-// fit in browser storage, save it without them instead of not at all.
+// Strip images to save space
 function withoutImages(appData) {
   const store = appData.storeProfile;
   return {
@@ -60,14 +61,14 @@ function withoutImages(appData) {
   };
 }
 
+// Save workspace snapshot
 export function saveWorkspaceSnapshot(appData) {
   if (!write("workspace", appData)) write("workspace", withoutImages(appData));
 }
 
 export const loadWorkspaceSnapshot = () => loadSnapshot("workspace");
 
-// True for failures caused by the connection (offline, slow, unreachable),
-// not for real answers like "access denied".
+// True for connection failures
 export function isConnectionError(error) {
   if (typeof navigator !== "undefined" && !navigator.onLine) return true;
   const message = String(error?.message || error || "");
@@ -80,7 +81,7 @@ export function isConnectionError(error) {
   );
 }
 
-// "Nov 24, 3:10 PM"
+// Format saved time
 export function formatSavedAt(iso) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "earlier";

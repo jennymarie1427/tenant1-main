@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-// True while the browser reports a network connection. Updates live when the
-// connection drops or comes back.
+// Browser online status
 function subscribe(callback) {
   window.addEventListener("online", callback);
   window.addEventListener("offline", callback);
@@ -19,8 +18,7 @@ export function useOnlineStatus() {
   );
 }
 
-// Whether a Supabase sign-in is saved in this browser, so the loading screen
-// can show the right skeleton (portal vs. login) before data arrives.
+// Supabase session saved in browser
 export function hasStoredSession() {
   try {
     return Object.keys(localStorage).some(

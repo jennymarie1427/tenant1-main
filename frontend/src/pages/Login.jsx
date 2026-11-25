@@ -11,6 +11,7 @@ const ErrorText = ({ children }) =>
     </p>
   ) : null;
 
+// Login page
 export default function Login({ onLogin }) {
   const [resetSuccess, setResetSuccess] = useState(
     () => sessionStorage.getItem("navar-password-updated") === "true",

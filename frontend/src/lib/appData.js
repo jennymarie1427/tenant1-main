@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { readData } from "./api";
 
+// Map promotion row to app shape
 function promotionFromRow(promotion) {
   return {
     id: promotion.promotion_id,
@@ -11,8 +12,6 @@ function promotionFromRow(promotion) {
     image: promotion.promotion_image_base64
       ? `data:image/png;base64,${promotion.promotion_image_base64}`
       : null,
-    // Email metrics: inboxes reached, estimated opens, and recipients who
-    // navigated to the store within 7 days of the email.
     emailed: Number(promotion.promotion_emailed) || 0,
     opened: Number(promotion.promotion_opened) || 0,
     emailVisits: Number(promotion.promotion_email_visits) || 0,
@@ -20,6 +19,7 @@ function promotionFromRow(promotion) {
   };
 }
 
+// Load store promotions
 export async function loadPromotions(storeId) {
   if (!supabase || !storeId) throw new Error("Promotions are not available.");
   const { data, error } = await supabase.rpc("get_my_promotions", {
@@ -29,8 +29,7 @@ export async function loadPromotions(storeId) {
   return (data || []).map(promotionFromRow);
 }
 
-// Customer visits (navigation sessions to this store), peak times,
-// demographics and promotion email metrics for the last `days` days (7, 30 or 90).
+// Load store analytics
 export async function loadStoreAnalytics(storeId, days = 7) {
   if (!supabase || !storeId) throw new Error("Analytics are not available.");
   const { data, error } = await supabase.rpc("get_my_store_insights", {
@@ -41,6 +40,7 @@ export async function loadStoreAnalytics(storeId, days = 7) {
   return data;
 }
 
+// Create promotion
 export async function createPromotion(storeId, promotion) {
   const { data, error } = await supabase.rpc("create_my_promotion", {
     p_store: storeId,
@@ -50,6 +50,7 @@ export async function createPromotion(storeId, promotion) {
   return data;
 }
 
+// Update promotion
 export async function updatePromotion(storeId, promotionId, promotion) {
   const { error } = await supabase.rpc("update_my_promotion", {
     p_store: storeId,
@@ -59,13 +60,12 @@ export async function updatePromotion(storeId, promotionId, promotion) {
   if (error) throw error;
 }
 
-// Promotion images live in the private navar-images bucket, next to the
-// existing brands/<id>/..., malls/<id>/image and admins/<id>/image files.
+// Promotion image storage path
 const IMAGE_BUCKET = "navar-images";
 export const promotionImagePath = (promotionId) =>
   `promotions/${promotionId}/image`;
 
-// Uploads (or replaces) the promotion's image in Storage and returns its path.
+// Upload promotion image
 export async function uploadPromotionImage(promotionId, file) {
   const path = promotionImagePath(promotionId);
   const { error } = await supabase.storage
@@ -80,9 +80,7 @@ export async function uploadPromotionImage(promotionId, file) {
   return path;
 }
 
-// Emails a newly created promotion to registered mobile users who have visited
-// the store's mall (supabase/functions/notify-promotion). Returns
-// { queued, mall_name }; sending continues on the server after this returns.
+// Email promotion to mall visitors
 export async function notifyPromotionVisitors(promotionId) {
   const { data, error } = await supabase.functions.invoke("notify-promotion", {
     body: { promotion_id: promotionId },
@@ -94,9 +92,9 @@ export async function notifyPromotionVisitors(promotionId) {
   return data;
 }
 
+// Delete promotion and image
 export async function deletePromotion(storeId, promotionId) {
-  // Remove the image first: Storage only lets a tenant touch it while the
-  // promotion row still exists. A missing file is not an error here.
+  // Delete image before row
   await supabase.storage
     .from(IMAGE_BUCKET)
     .remove([promotionImagePath(promotionId)])
@@ -108,6 +106,7 @@ export async function deletePromotion(storeId, promotionId) {
   if (error) throw error;
 }
 
+// Load signed-in workspace data
 export async function loadAppData() {
   const [identities, tenants, stores] = await Promise.all([
     readData("app_user"),
@@ -149,12 +148,14 @@ export async function loadAppData() {
   };
 }
 
+// Fetch promotions
 export async function fetchPromotions(storeId) {
   if (!supabase || !storeId) return null;
   const data = await readData("promotion", { storeId });
   return data.map(promotionFromRow);
 }
 
+// Load store profile
 export async function loadStoreProfile(storeId) {
   if (!supabase || !storeId) throw new Error("Store profile is not available.");
   const { data, error } = await supabase.rpc("get_my_store_profile", {
@@ -164,6 +165,7 @@ export async function loadStoreProfile(storeId) {
   return data;
 }
 
+// Save store profile
 export async function saveStoreProfile(storeId, profile) {
   if (!supabase || !storeId) throw new Error("Store profile is not available.");
   const { error } = await supabase.rpc("update_my_store_profile", {
@@ -173,6 +175,7 @@ export async function saveStoreProfile(storeId, profile) {
   if (error) throw error;
 }
 
+// Sign in
 export async function signIn(email, password) {
   if (!supabase) throw new Error("Authentication is not configured.");
   const { error } = await supabase.auth.signInWithPassword({
@@ -188,6 +191,7 @@ export async function signIn(email, password) {
   }
 }
 
+// Send password reset email
 export async function requestPasswordReset(email) {
   if (!supabase) throw new Error("Authentication is not configured.");
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -196,27 +200,29 @@ export async function requestPasswordReset(email) {
   if (error) throw error;
 }
 
+// Get current session
 export async function getCurrentSession() {
   localStorage.removeItem("navar_demo_role");
   if (!supabase) return null;
   const { data, error } = await supabase.auth.getSession();
   if (error) throw error;
   if (!data.session) return null;
-  // The API verifies the token with Auth and resolves active tenant_account membership.
+  // Server verifies token and tenant membership
   const identities = await readData("app_user");
   if (!identities[0])
     throw new Error("No active tenant assignment is available.");
   return { role: "tenant", email: identities[0].user_email };
 }
 
+// Sign out
 export async function signOut() {
   localStorage.removeItem("navar_demo_role");
   if (supabase) await supabase.auth.signOut();
 }
 
+// Update tenant profile
 export async function updateTenantProfile(profile, values) {
   if (!supabase) throw new Error("Authentication is not configured.");
-  // Server-side membership checks apply even when a client changes profile.tenant_id.
   const { error } = await supabase.rpc("update_my_tenant_contact", {
     p_tenant: profile.tenant_id,
     p_name: values.contactName,
@@ -237,6 +243,7 @@ export async function updateTenantProfile(profile, values) {
   }
 }
 
+// Change password
 export async function changePassword(
   email,
   currentPassword,

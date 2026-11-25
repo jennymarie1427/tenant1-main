@@ -10,6 +10,7 @@ import {
 import PasswordInput from "../components/common/PasswordInput";
 import "../styles/login/login.css";
 
+// Reset password page
 export default function ResetPasswordPage() {
   const [link] = useState(() =>
     readInvitationLink(window.location, sessionStorage),

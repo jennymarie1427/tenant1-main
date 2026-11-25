@@ -3,7 +3,7 @@ import { CloudOff, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { formatSavedAt } from "../../lib/offlineCache";
 
-// Small note above charts that are showing a saved copy (offline mode).
+// Offline copy note above charts
 export function SavedCopyNote({ savedAt }) {
   return (
     <p className="mb-4 flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2.5 text-sm text-amber-800" role="status">
@@ -13,8 +13,7 @@ export function SavedCopyNote({ savedAt }) {
   );
 }
 
-// Shown at the top of the portal while it's displaying the saved offline copy.
-// Reloads by itself when the browser reports the connection is back.
+// Offline mode banner
 export function OfflineModeBanner({ savedAt }) {
   useEffect(() => {
     const reconnect = () => window.location.reload();
@@ -44,8 +43,7 @@ export function OfflineModeBanner({ savedAt }) {
   );
 }
 
-// Full-page screen when the app can't load because there's no connection.
-// Reloads by itself as soon as the connection comes back.
+// No connection screen
 export function OfflineScreen() {
   const online = useOnlineStatus();
   const [checking, setChecking] = useState(false);
@@ -97,8 +95,7 @@ export function OfflineScreen() {
   );
 }
 
-// Slim banner when the connection drops while the app is open, and a brief
-// "Back online" note when it returns.
+// Connection lost / restored banner
 export function ConnectionBanner() {
   const online = useOnlineStatus();
   const [backOnline, setBackOnline] = useState(false);

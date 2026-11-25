@@ -2,9 +2,10 @@ import security from "./security.cjs";
 import { createServer } from "node:http";
 import { pathToFileURL } from "node:url";
 
+// Log upstream error and send friendly response
 async function upstreamFailure(response, send, operation) {
   const error = await response.json().catch(() => ({}));
-  // Log only the operation/code; never access tokens or row data.
+  // Log operation/status only, never tokens or data
   console.error(
     JSON.stringify({
       operation,
@@ -30,7 +31,7 @@ async function upstreamFailure(response, send, operation) {
   });
 }
 
-// Forward the user's token with a public key so Supabase RLS stays in effect.
+// Tenant API request handler (uses user token so RLS applies)
 export function createHandler(env = process.env, request = fetch) {
   security.assertProductionOrigins(env, [
     env.FRONTEND_ORIGIN || "http://localhost:5175",
@@ -43,7 +44,7 @@ export function createHandler(env = process.env, request = fetch) {
       Buffer.from(publicKey.split(".")[1], "base64url").toString(),
     ).role;
   } catch {
-    // Not a JWT (e.g. a publishable key), so there is no role to inspect.
+    // not a JWT
   }
   if (publicKey.startsWith("sb_secret_") || role === "service_role")
     throw new Error("Tenant API requires a public Supabase key.");
@@ -128,7 +129,7 @@ export function createHandler(env = process.env, request = fetch) {
         )
       )
         return send(502, { message: "Invalid tenant assignment." });
-      // Compatibility identity, synthesized from the verified user; never expose app_user rows.
+      // Build user identity from verified session
       if (table === "app_user")
         return send(200, [
           {

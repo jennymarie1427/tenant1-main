@@ -31,6 +31,7 @@ const showDate = (iso) =>
   iso ? `${iso.slice(5, 7)}/${iso.slice(8, 10)}/${iso.slice(0, 4)}` : "";
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
+// Promotion date range picker
 function PromotionDateRangePicker({
   start: startProp,
   end: endProp,
@@ -78,12 +79,12 @@ function PromotionDateRangePicker({
       return setActiveField("end");
     }
 
-    // picking the end date
+    // Picking end date
     if (!start) {
       onChange(iso, "");
       return;
     }
-    // picking an end before the start swaps them
+    // End before start: swap
     onChange(iso < start ? iso : start, iso < start ? start : iso);
     setOpen(false);
   };
@@ -209,6 +210,7 @@ function PromotionDateRangePicker({
   );
 }
 
+// Promotion create/edit modal
 function PromoModal({ initial, onClose, onSave, saving = false }) {
   const [f, setF] = useState(
     initial || {
@@ -223,7 +225,7 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
   const [zoomImage, setZoomImage] = useState(null);
   const set = (k, v) => setF((c) => ({ ...c, [k]: v }));
   const ok = f.title.trim() && f.start && f.end;
-  // An already-ended promotion can't be emailed (the server refuses it too).
+  // Ended promotions cannot be emailed
   const ended = Boolean(f.end) && f.end < toIso(new Date());
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 p-4 backdrop-blur-sm">
@@ -344,6 +346,7 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
   );
 }
 
+// Promotions tab
 export function Promotions({ promos, setPromos, storeId }) {
   const [modal, setModal] = useState(null); // null | "new" | promo
   const [preview, setPreview] = useState(null);
@@ -375,8 +378,7 @@ export function Promotions({ promos, setPromos, storeId }) {
       } else {
         await updatePromotion(storeId, promotionId, payload);
       }
-      // The Storage path uses the promotion id, so upload after the row exists,
-      // then record the path. Omitting image_data_url keeps the saved bytes.
+      // Upload image after row exists
       if (f.imageFile && promotionId) {
         const imagePath = await uploadPromotionImage(promotionId, f.imageFile);
         const details = { ...payload, image_path: imagePath };

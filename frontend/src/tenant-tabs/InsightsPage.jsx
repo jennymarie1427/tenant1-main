@@ -25,6 +25,7 @@ const PieSkeleton = () => (
   </div>
 );
 
+// Analytics tab
 export function Analytics({ profile, data, storeId }) {
   const on = useMounted();
   const [range, setRange] = useState(ANALYTICS_RANGES[0].label);

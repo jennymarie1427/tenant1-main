@@ -4,6 +4,7 @@ const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
 export const today = () => new Date().toISOString().slice(0, 10);
 
+// Download rows as CSV
 export function downloadCsv(filename, rows) {
   const csv = rows.map((r) => r.map(cell).join(",")).join("\n");
   const url = URL.createObjectURL(
@@ -19,6 +20,7 @@ export function downloadCsv(filename, rows) {
 }
 
 
+// Brand logo source
 export function logoSource(brand, fallback) {
   if (brand?.brand_logo_base64)
     return `data:image/png;base64,${brand.brand_logo_base64}`;
@@ -37,6 +39,7 @@ export const STORE_PROFILE_DAYS = [
 
 export const EMPTY_CATEGORIES = {};
 
+// Format long date
 export function formatLongDate(value) {
   if (!value) return "";
   const date = new Date(`${String(value).slice(0, 10)}T00:00:00Z`);
@@ -52,6 +55,7 @@ export function formatLongDate(value) {
 export const formatDateRangeLong = (start, end) =>
   [formatLongDate(start), formatLongDate(end)].filter(Boolean).join(" - ");
 
+// Smooth line path
 export function smooth(pts) {
   const n = pts.length;
   if (n === 0) return "";
@@ -92,6 +96,7 @@ export function smooth(pts) {
   return d;
 }
 
+// Mounted flag hook
 export function useMounted() {
   const [m, setM] = useState(false);
   useEffect(() => {

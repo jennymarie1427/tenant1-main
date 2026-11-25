@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
+// Password input with show/hide toggle
 export default function PasswordInput({ id, className = 'login-input', ...props }) {
   const generatedId = useId()
   const inputId = id || generatedId
