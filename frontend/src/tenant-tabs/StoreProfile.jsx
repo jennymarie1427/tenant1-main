@@ -243,6 +243,7 @@ export function StoreProfile({ logo, setLogo, profile, data, storeProfile }) {
                 <span className="w-24">{d}</span>
                 <span className="flex w-24 items-center gap-2">
                   <Toggle
+                    label={`Open on ${d}`}
                     on={isOpen}
                     onChange={() => flip(openDays, setOpenDays, d)}
                   />

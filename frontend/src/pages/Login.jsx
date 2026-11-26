@@ -55,6 +55,7 @@ export default function Login({ onLogin }) {
     if (Object.keys(next).length) return setErrors(next);
 
     setErrors({});
+    setSubmitting(true);
     try {
       const session = await signIn(user.trim(), pass);
       await onLogin(session);
@@ -70,6 +71,7 @@ export default function Login({ onLogin }) {
       )
         setErrors({ user: message });
       else setErrors({ form: message });
+      setSubmitting(false);
     }
   };
 
@@ -136,6 +138,7 @@ export default function Login({ onLogin }) {
               <div className="mb-4">
                 <input
                   className={inputClass(errors.user)}
+                  autoComplete="username"
                   placeholder="Email address or username"
                   aria-invalid={Boolean(errors.user)}
                   value={user}
@@ -184,11 +187,14 @@ export default function Login({ onLogin }) {
           )}
           {!resetSent && (
             <button
+              type="submit"
               disabled={submitting}
               className="login-submit-button w-full rounded-2xl bg-sky-500 py-5 text-sm font-medium tracking-wide text-white shadow-md hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting
-                ? "SENDING..."
+                ? forgotPassword
+                  ? "SENDING..."
+                  : "LOGGING IN..."
                 : forgotPassword
                   ? "SEND RESET LINK"
                   : "LOGIN"}

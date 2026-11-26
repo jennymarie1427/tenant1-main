@@ -74,3 +74,173 @@ button:disabled {
   outline: 2px solid rgba(80, 148, 251, 0.25);
   border-color: #5094fb;
 }
+
+/* Dark theme (Primer palette, WCAG AA) */
+.theme-dark {
+  color-scheme: dark;
+  --surface: #0d1117;
+
+  /* Neutrals */
+  --color-slate-50: #151b23;
+  --color-slate-100: #21262d;
+  --color-slate-200: #30363d;
+  --color-slate-300: #656c76;
+  --color-slate-400: #9198a1;
+  --color-slate-500: #9198a1;
+  --color-slate-600: #b7bdc8;
+  --color-slate-700: #d1d7e0;
+  --color-slate-800: #e6edf3;
+  --color-slate-900: #f0f6fc;
+  --color-slate-950: #ffffff;
+
+  --color-gray-50: #151b23;
+  --color-gray-100: #21262d;
+  --color-gray-200: #30363d;
+  --color-gray-300: #656c76;
+  --color-gray-400: #9198a1;
+  --color-gray-500: #9198a1;
+  --color-gray-600: #b7bdc8;
+  --color-gray-700: #d1d7e0;
+  --color-gray-800: #e6edf3;
+  --color-gray-900: #f0f6fc;
+  --color-gray-950: #ffffff;
+
+  /* Tints */
+  --color-blue-50: rgb(56 139 253 / 0.15);
+  --color-blue-100: rgb(56 139 253 / 0.25);
+  --color-sky-50: rgb(56 139 253 / 0.1);
+  --color-sky-100: rgb(56 139 253 / 0.15);
+  --color-sky-200: rgb(56 139 253 / 0.25);
+  --color-red-50: rgb(248 81 73 / 0.1);
+  --color-red-100: rgb(248 81 73 / 0.2);
+  --color-green-50: rgb(46 160 67 / 0.15);
+  --color-green-100: rgb(46 160 67 / 0.2);
+  --color-green-200: rgb(46 160 67 / 0.25);
+  --color-amber-50: rgb(187 128 9 / 0.15);
+  --color-amber-100: rgb(187 128 9 / 0.25);
+  --color-amber-200: rgb(187 128 9 / 0.4);
+
+  /* Solid fills */
+  --color-blue-500: #1158c7;
+  --color-blue-600: #1f6feb;
+  --color-green-600: #238636;
+  --color-green-700: #196c2e;
+  --color-red-600: #da3633;
+  --color-red-700: #b62324;
+  --color-amber-600: #9e6a03;
+  --color-amber-700: #845306;
+}
+
+/* Page and sidebar */
+.theme-dark.tenant-portal {
+  background-color: #0d1117;
+}
+.theme-dark .tenant-sidebar {
+  background-color: #010409;
+}
+
+/* Class overrides (low specificity, hover still wins) */
+@layer utilities {
+  /* Surfaces */
+  :where(.theme-dark) .bg-white,
+  :where(.theme-dark) .hover\:bg-white:hover {
+    background-color: var(--surface);
+  }
+  :where(.theme-dark) .bg-white\/50,
+  :where(.theme-dark) .bg-white\/60 {
+    background-color: color-mix(in oklab, var(--surface) 60%, transparent);
+  }
+
+  /* Tooltips and backdrop */
+  :where(.theme-dark) .bg-slate-800 {
+    background-color: #3d444d;
+  }
+  :where(.theme-dark) .text-slate-300 {
+    color: #d1d7e0;
+  }
+  :where(.theme-dark) .bg-slate-900\/40 {
+    background-color: rgb(1 4 9 / 0.7);
+  }
+
+  /* Brand buttons */
+  :where(.theme-dark) .bg-\[\#5094fb\] {
+    background-color: #1f6feb;
+  }
+  :where(.theme-dark) .bg-\[\#3b7fe6\],
+  :where(.theme-dark) .hover\:bg-\[\#3b7fe6\]:hover {
+    background-color: #1158c7;
+  }
+  :where(.theme-dark) .border-\[\#5094fb\] {
+    border-color: #4493f8;
+  }
+
+  /* Accent text */
+  :where(.theme-dark) .text-blue-600,
+  :where(.theme-dark) .text-blue-700,
+  :where(.theme-dark) .text-sky-600,
+  :where(.theme-dark) .text-\[\#2563eb\],
+  :where(.theme-dark) .text-\[\#5094fb\] {
+    color: #4493f8;
+  }
+  :where(.theme-dark) .text-red-500,
+  :where(.theme-dark) .text-red-600,
+  :where(.theme-dark) .text-red-700,
+  :where(.theme-dark) .hover\:text-red-500:hover,
+  :where(.theme-dark) .hover\:text-red-600:hover {
+    color: #f85149;
+  }
+  :where(.theme-dark) .text-green-600,
+  :where(.theme-dark) .text-green-700 {
+    color: #3fb950;
+  }
+  :where(.theme-dark) .text-amber-600,
+  :where(.theme-dark) .text-amber-800,
+  :where(.theme-dark) .text-amber-900 {
+    color: #d29922;
+  }
+}
+
+/* Native controls */
+.theme-dark.tenant-portal select,
+.theme-dark.tenant-portal input[type="date"],
+.theme-dark.tenant-portal input[type="time"],
+.theme-dark .tenant-portal select,
+.theme-dark .tenant-portal input[type="date"],
+.theme-dark .tenant-portal input[type="time"] {
+  border-color: #656c76;
+  background-color: #0d1117;
+  color: #f0f6fc;
+  accent-color: #1f6feb;
+}
+.theme-dark.tenant-portal input[type="date"]::-webkit-calendar-picker-indicator,
+.theme-dark.tenant-portal input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+.theme-dark input::placeholder,
+.theme-dark textarea::placeholder {
+  color: #848d97;
+}
+
+/* Focus ring */
+.tenant-portal {
+  --focus-ring: #2563eb;
+}
+.theme-dark.tenant-portal {
+  --focus-ring: #4493f8;
+}
+.tenant-portal :is(button, a, [role="button"], [role="switch"], [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tenant-portal *,
+  .tenant-portal *::before,
+  .tenant-portal *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

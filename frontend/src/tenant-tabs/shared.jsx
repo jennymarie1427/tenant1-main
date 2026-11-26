@@ -18,25 +18,39 @@ import { smooth, useMounted } from "./utils";
 
 const BLUE = "bg-[#5094fb]";
 
-// Shared UI 
+// Shared UI
 export const Card = ({ className = "", children }) => (
   <div className={`rounded-2xl border border-gray-200 bg-white ${className}`}>
     {children}
   </div>
 );
 
-// Alert modal
-export function AlertModal({ message, variant = "error", onClose }) {
+// Alert / confirm modal
+export function AlertModal({ message, variant = "error", onClose, onConfirm, title }) {
   if (!message) return null;
   return (
-    <AlertModalContent message={message} variant={variant} onClose={onClose} />
+    <AlertModalContent
+      message={message}
+      variant={variant}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      title={title}
+    />
   );
 }
 
-function AlertModalContent({ message, variant, onClose }) {
+function AlertModalContent({ message, variant, onClose, onConfirm, title }) {
   const on = useMounted();
   const success = variant === "success";
+  const confirm = !!onConfirm;
   const Icon = success ? CheckCircle2 : CircleAlert;
+  const iconTone = success
+    ? "bg-green-100 text-green-600"
+    : confirm
+      ? "bg-amber-100 text-amber-600"
+      : "bg-red-100 text-red-600";
+  const heading =
+    title || (confirm ? "Are you sure?" : success ? "Success!" : "Something went wrong");
 
   useEffect(() => {
     const onKey = (e) => {
@@ -61,7 +75,7 @@ function AlertModalContent({ message, variant, onClose }) {
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div
-          className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${success ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
+          className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full ${iconTone}`}
         >
           <Icon size={30} aria-hidden="true" />
         </div>
@@ -69,7 +83,7 @@ function AlertModalContent({ message, variant, onClose }) {
           id="alert-modal-title"
           className="mt-5 text-xl font-bold text-slate-900"
         >
-          {success ? "Success" : "Something went wrong"}
+          {heading}
         </h2>
         <p
           id="alert-modal-message"
@@ -77,14 +91,34 @@ function AlertModalContent({ message, variant, onClose }) {
         >
           {message}
         </p>
-        <button
-          type="button"
-          autoFocus
-          onClick={onClose}
-          className={`mt-6 w-full rounded-lg px-5 py-2.5 font-medium text-white transition-colors ${success ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}`}
-        >
-          Got it
-        </button>
+        {confirm ? (
+          <div className="mt-6 flex gap-3">
+            <button
+              type="button"
+              autoFocus
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-gray-300 bg-white px-5 py-2.5 font-medium text-slate-700 transition-colors hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="flex-1 rounded-lg bg-[#5094fb] px-5 py-2.5 font-medium text-white transition-colors hover:bg-[#3b7fe6]"
+            >
+              Continue
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            autoFocus
+            onClick={onClose}
+            className={`mt-6 w-full rounded-lg px-5 py-2.5 font-medium text-white transition-colors ${success ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}`}
+          >
+            Got it
+          </button>
+        )}
       </div>
     </div>
   );
@@ -150,14 +184,18 @@ export function PasswordField({ label, value, onChange, autoComplete }) {
 }
 
 // Toggle switch
-export function Toggle({ on, onChange }) {
+export function Toggle({ on, onChange, label }) {
   return (
     <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
       onClick={() => onChange(!on)}
       className={`relative h-5 w-9 shrink-0 rounded-full transition ${on ? "bg-[#5094fb]" : "bg-gray-300"}`}
     >
       <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${on ? "left-4.5" : "left-0.5"}`}
+        className={`absolute top-0.5 h-4 w-4 rounded-full bg-[#fff] shadow-sm transition-all ${on ? "left-4.5" : "left-0.5"}`}
       />
     </button>
   );
@@ -205,7 +243,7 @@ export const Head = ({ title, sub, right }) => {
   return (
     <div className="mb-6 flex items-start justify-between">
       <div className="flex items-start gap-4">
-        {I && <I size={34} className="mt-0.5 text-[#5094fb]" />}
+        {I && <I size={34} className="mt-0.5 text-slate-900" />}
         <div>
           <h1 className="text-3xl font-bold">{title}</h1>
           {sub && <p className="mt-2 text-gray-500">{sub}</p>}

@@ -310,7 +310,11 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
                   : "Email this promotion to NavAR app users who have visited your mall."}
               </p>
             </div>
-            {!ended && <Toggle on={f.notify} onChange={(v) => set("notify", v)} />}
+            {!ended && <Toggle
+                label="Notify registered users"
+                on={f.notify}
+                onChange={(v) => set("notify", v)}
+              />}
           </div>
         )}
         <div className="mt-5 flex justify-end gap-3">
@@ -346,6 +350,8 @@ function PromoModal({ initial, onClose, onSave, saving = false }) {
   );
 }
 
+const PAGE_SIZE = 3;
+
 // Promotions tab
 export function Promotions({ promos, setPromos, storeId }) {
   const [modal, setModal] = useState(null); // null | "new" | promo
@@ -353,6 +359,13 @@ export function Promotions({ promos, setPromos, storeId }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
+  const [confirm, setConfirm] = useState(null); // null | { message, action }
+  const [page, setPage] = useState(1);
+  // Pagination
+  const pageCount = Math.max(1, Math.ceil(promos.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const pagePromos = promos.slice(pageStart, pageStart + PAGE_SIZE);
   const stat = [
     ["Total Promotions", promos.length],
     ["Active", promos.filter((p) => p.active).length],
@@ -362,6 +375,7 @@ export function Promotions({ promos, setPromos, storeId }) {
   const save = async (f) => {
     setSaving(true);
     setError("");
+    setNotice("");
     try {
       const payload = {
         title: f.title,
@@ -388,8 +402,12 @@ export function Promotions({ promos, setPromos, storeId }) {
       const refreshed = await loadPromotions(storeId);
       setPromos(refreshed);
       setModal(null);
+      const notifying = modal === "new" && f.notify && promotionId;
+      if (!notifying) {
+        setNotice(modal === "new" ? "Promotion created." : "Promotion changes saved.");
+      }
 
-      if (modal === "new" && f.notify && promotionId) {
+      if (notifying) {
         try {
           const result = await notifyPromotionVisitors(promotionId);
           const mall = result?.mall_name || "your mall";
@@ -408,6 +426,36 @@ export function Promotions({ promos, setPromos, storeId }) {
       setSaving(false);
     }
   };
+  // Status toggle
+  const toggle = async (p) => {
+    try {
+      await updatePromotion(storeId, p.id, {
+        title: p.title,
+        description: p.desc,
+        start: p.start,
+        end: p.end,
+        status: p.active ? "inactive" : "active",
+      });
+      setPromos(
+        promos.map((x) => (x.id === p.id ? { ...x, active: !x.active } : x)),
+      );
+      setNotice(`Promotion ${p.active ? "deactivated" : "activated"}.`);
+    } catch (toggleError) {
+      setError(toggleError.message || "Unable to update promotion status.");
+    }
+  };
+  // Delete promotion
+  const remove = async (p) => {
+    try {
+      await deletePromotion(storeId, p.id);
+      setPromos(promos.filter((x) => x.id !== p.id));
+      setNotice("Promotion deleted.");
+    } catch (deleteError) {
+      setError(deleteError.message || "Unable to delete promotion.");
+    }
+  };
+  // Confirm dialog
+  const ask = (message, action) => setConfirm({ message, action });
   return (
     <>
       <Head
@@ -426,6 +474,15 @@ export function Promotions({ promos, setPromos, storeId }) {
         onClose={() => {
           setError("");
           setNotice("");
+        }}
+      />
+      <AlertModal
+        message={confirm?.message}
+        onClose={() => setConfirm(null)}
+        onConfirm={() => {
+          const action = confirm.action;
+          setConfirm(null);
+          action();
         }}
       />
       <div className="mb-6 grid grid-cols-4 gap-6">
@@ -465,9 +522,16 @@ export function Promotions({ promos, setPromos, storeId }) {
               ))}
             </tr>
           </thead>
+          {/* Table rows */}
           <tbody>
-            {promos.map((p) => (
-              <tr key={p.id} className="border-t">
+            {pagePromos.map((p, i) => {
+              // Striped rows
+              const even = i % 2 === 0;
+              return (
+              <tr
+                key={p.id}
+                className={`border-t ${even ? "bg-white" : "bg-slate-50"}`}
+              >
                 <td className="max-w-sm px-6 py-4">
                   <div className="flex items-center gap-4">
                     <button
@@ -479,7 +543,7 @@ export function Promotions({ promos, setPromos, storeId }) {
                     </button>
                     <div>
                       <p className="font-medium">{p.title}</p>
-                      <p className="text-sm text-gray-500">{p.desc}</p>
+                      <p className="text-sm opacity-80">{p.desc}</p>
                     </div>
                   </div>
                 </td>
@@ -491,14 +555,14 @@ export function Promotions({ promos, setPromos, storeId }) {
                 <td className="px-6 py-4">{(p.emailed || 0).toLocaleString()}</td>
                 <td className="px-6 py-4">
                   <span className="flex items-center gap-2">
-                    <Eye size={15} className="text-gray-400" />
+                    <Eye size={15} className="opacity-70" />
                     {(p.opened || 0).toLocaleString()}
                   </span>
                 </td>
                 <td className="px-6 py-4">{(p.emailVisits || 0).toLocaleString()}</td>
                 <td className="px-6 py-4">
                   <span
-                    className={`rounded-full px-3 py-1 text-sm ${p.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}
+                    className={`rounded-full px-3 py-1 text-sm ${p.active ? "bg-green-200 text-green-700" : "bg-gray-200 text-gray-600"}`}
                   >
                     {p.active ? "active" : "inactive"}
                   </span>
@@ -507,27 +571,12 @@ export function Promotions({ promos, setPromos, storeId }) {
                   <div className="flex justify-end gap-4">
                     <button
                       title="Toggle"
-                      onClick={async () => {
-                        try {
-                          await updatePromotion(storeId, p.id, {
-                            title: p.title,
-                            description: p.desc,
-                            start: p.start,
-                            end: p.end,
-                            status: p.active ? "inactive" : "active",
-                          });
-                          setPromos(
-                            promos.map((x) =>
-                              x.id === p.id ? { ...x, active: !x.active } : x,
-                            ),
-                          );
-                        } catch (toggleError) {
-                          setError(
-                            toggleError.message ||
-                              "Unable to update promotion status.",
-                          );
-                        }
-                      }}
+                      onClick={() =>
+                        ask(
+                          `${p.active ? "Deactivate" : "Activate"} "${p.title}"?`,
+                          () => toggle(p),
+                        )
+                      }
                     >
                       <Power size={16} />
                     </button>
@@ -536,25 +585,21 @@ export function Promotions({ promos, setPromos, storeId }) {
                     </button>
                     <button
                       title="Delete"
-                      onClick={async () => {
-                        try {
-                          await deletePromotion(storeId, p.id);
-                          setPromos(promos.filter((x) => x.id !== p.id));
-                        } catch (deleteError) {
-                          setError(
-                            deleteError.message ||
-                              "Unable to delete promotion.",
-                          );
-                        }
-                      }}
-                      className="text-red-600"
+                      onClick={() =>
+                        ask(
+                          `Delete "${p.title}"? This cannot be undone.`,
+                          () => remove(p),
+                        )
+                      }
+                      className="text-red-700"
                     >
                       <Trash2 size={16} />
                     </button>
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
             {promos.length === 0 && (
               <tr>
                 <td
@@ -566,6 +611,43 @@ export function Promotions({ promos, setPromos, storeId }) {
               </tr>
             )}
           </tbody>
+          {/* Pagination */}
+          <tfoot className="bg-slate-50 text-sm">
+              <tr>
+                <td colSpan={7} className="px-6 py-4">
+                  <div className="flex items-center justify-end gap-3 text-gray-500">
+                    <span className="mr-auto">
+                      {promos.length === 0
+                        ? "0 entries"
+                        : `Showing ${pageStart + 1}-${pageStart + pagePromos.length} of ${promos.length}`}
+                    </span>
+                    <button
+                      type="button"
+                      title="Previous page"
+                      aria-label="Previous page"
+                      onClick={() => setPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
+                    <span aria-live="polite">
+                      Page {currentPage} of {pageCount}
+                    </span>
+                    <button
+                      type="button"
+                      title="Next page"
+                      aria-label="Next page"
+                      onClick={() => setPage(currentPage + 1)}
+                      disabled={currentPage === pageCount}
+                      className="hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+          </tfoot>
         </table>
       </Card>
       {modal && (

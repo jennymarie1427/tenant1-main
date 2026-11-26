@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Save } from "lucide-react";
+import { MapPin, Save } from "lucide-react";
 import {
   Card,
   Btn,
@@ -99,7 +99,12 @@ export function ProfileSettings({ logo, profile }) {
           <p className="text-2xl">
             {profile?.store_name || profile?.tenant_name || profile?.name}
           </p>
-          <p className="mt-2 text-gray-500">{profile?.subtitle}</p>
+          <p className="mt-2 flex items-center gap-1.5 text-gray-500">
+            {profile?.mallName && (
+              <MapPin size={16} className="shrink-0 text-blue-600" />
+            )}
+            {profile?.mallName || profile?.subtitle}
+          </p>
         </div>
       </Card>
       <Card className="mb-6 p-6">

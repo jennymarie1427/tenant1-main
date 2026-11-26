@@ -1,4 +1,6 @@
 
+import { readTheme } from "../../lib/theme";
+
 // Loading placeholder block
 export function Skeleton({ className = "" }) {
   return <div className={`animate-pulse rounded-lg bg-slate-200/80 ${className}`} />;
@@ -56,26 +58,53 @@ export function ListSkeleton({ rows = 2 }) {
 
 // Portal placeholder
 export function PortalSkeleton() {
+  let collapsed = false;
+  try {
+    collapsed = localStorage.getItem("tenant-sidebar-collapsed") === "1";
+  } catch {
+    // No storage: expanded
+  }
   return (
-    <div className="flex min-h-screen bg-slate-50" role="status" aria-live="polite" aria-label="Loading your store">
-      <aside className="flex h-screen w-64 shrink-0 flex-col bg-sky-100/70">
-        <div className="border-b border-sky-200 px-6 py-5">
-          <Skeleton className="h-6 w-32 bg-sky-200/80" />
+    <div className={`tenant-portal flex min-h-screen bg-slate-50 ${readTheme() === "dark" ? "theme-dark" : ""}`} role="status" aria-live="polite" aria-label="Loading your store">
+      <aside
+        className={`tenant-sidebar sticky top-0 flex h-screen shrink-0 flex-col border-r border-slate-200 bg-white ${
+          collapsed ? "w-20" : "w-64"
+        }`}
+      >
+        <div
+          className={`flex h-[73px] items-center gap-2 border-b border-slate-200 ${
+            collapsed ? "justify-center px-3" : "pl-6 pr-3"
+          }`}
+        >
+          {!collapsed && <Skeleton className="h-6 flex-1" />}
+          <Skeleton className="h-9 w-9 shrink-0" />
         </div>
-        <div className="flex-1 space-y-2 p-4">
+        <div className={`flex-1 space-y-1 ${collapsed ? "p-3" : "p-4"}`}>
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg px-4 py-3">
-              <Skeleton className="h-5 w-5 bg-sky-200/80" />
-              <Skeleton className="h-4 w-28 bg-sky-200/80" />
+            <div
+              key={i}
+              className={`flex items-center gap-3 rounded-lg py-3 ${collapsed ? "justify-center" : "px-4"}`}
+            >
+              <Skeleton className="h-5 w-5 shrink-0" />
+              {!collapsed && <Skeleton className="h-4 w-28" />}
             </div>
           ))}
         </div>
-        <div className="flex items-center gap-3 border-t border-sky-200 p-4">
-          <Skeleton className="h-10 w-10 rounded-full bg-sky-200/80" />
-          <div className="flex-1">
-            <Skeleton className="h-4 w-24 bg-sky-200/80" />
-            <Skeleton className="mt-2 h-3 w-20 bg-sky-200/80" />
+        <div
+          className={`flex items-center gap-2 border-t border-slate-200 ${
+            collapsed ? "flex-col p-3" : "p-4"
+          }`}
+        >
+          <div className={`flex items-center gap-2 px-2 py-2 ${collapsed ? "" : "min-w-0 flex-1"}`}>
+            <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="mt-2 h-3 w-28" />
+              </div>
+            )}
           </div>
+          <Skeleton className="h-9 w-9 shrink-0" />
         </div>
       </aside>
       <main className="min-w-0 flex-1 px-8 py-8">
@@ -106,23 +135,25 @@ export function PortalSkeleton() {
 export function LoginSkeleton() {
   return (
     <div
-      className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-400 via-sky-200 to-white to-70% p-8"
+      className="flex min-h-screen items-center justify-center bg-linear-to-b from-sky-400 via-sky-200 to-white to-70% p-8"
       role="status"
       aria-live="polite"
       aria-label="Loading"
     >
-      <div className="flex w-full max-w-5xl items-center gap-16">
-        <div className="hidden flex-1 flex-col items-center gap-6 md:flex">
-          <Skeleton className="h-32 w-32 rounded-3xl bg-white/60" />
-          <Skeleton className="h-12 w-64 bg-sky-100" />
-          <Skeleton className="h-5 w-56 bg-sky-100" />
+      <div className="grid w-full max-w-6xl items-center gap-16 md:grid-cols-2">
+        <div className="hidden flex-col items-center md:flex">
+          <Skeleton className="h-40 w-95 rounded-3xl bg-white/50" />
+          <Skeleton className="mt-6 h-8 w-80 bg-white/60" />
         </div>
-        <div className="w-full max-w-md flex-1">
-          <Skeleton className="h-12 w-56 bg-white/60" />
-          <Skeleton className="mt-3 h-4 w-64 bg-white/60" />
-          <Skeleton className="mt-8 h-16 w-full rounded-2xl border border-sky-200 bg-sky-50" />
-          <Skeleton className="mt-5 h-16 w-full rounded-2xl border border-sky-200 bg-sky-50" />
-          <Skeleton className="mt-8 h-14 w-full rounded-2xl bg-sky-200" />
+        <div className="w-full max-w-md">
+          <Skeleton className="h-14 w-60 bg-white/60" />
+          <Skeleton className="mb-10 mt-3 h-6 w-72 bg-white/60" />
+          <Skeleton className="mb-4 h-16 w-full rounded-2xl border border-sky-200 bg-sky-50/80" />
+          <Skeleton className="h-16 w-full rounded-2xl border border-sky-200 bg-sky-50/80" />
+          <div className="mb-6 mt-3.5 flex justify-end">
+            <Skeleton className="h-4 w-32 bg-sky-100" />
+          </div>
+          <Skeleton className="h-15 w-full rounded-2xl bg-sky-300/70" />
         </div>
       </div>
       <span className="sr-only">Loading…</span>

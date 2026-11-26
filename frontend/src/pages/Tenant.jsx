@@ -6,14 +6,19 @@ import {
   BarChart3,
   LogOut,
   MapPin,
+  Moon,
+  Sun,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Dashboard } from "../tenant-tabs/Dashboard";
 import { StoreProfile } from "../tenant-tabs/StoreProfile";
 import { Promotions } from "../tenant-tabs/Promotions";
-import { Analytics } from "../tenant-tabs/InsightsPage";
+import { Analytics } from "../tenant-tabs/Analytics";
 import { ProfileSettings } from "../tenant-tabs/ProfileSettings";
 import { Logo } from "../tenant-tabs/shared";
 import { OfflineModeBanner } from "../components/common/ConnectionStatus";
+import { readTheme, saveTheme } from "../lib/theme";
 
 const NAV = [
   ["Dashboard", LayoutDashboard],
@@ -78,6 +83,23 @@ export default function Tenant({
   const [page, setPage] = useState(readPage);
   const [logo, setLogo] = useState(profile?.logo || "/uniqlo-logo.svg");
   const [promos, setPromos] = useState(promotions);
+  // Sidebar collapse
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem("tenant-sidebar-collapsed") === "1",
+  );
+  const toggleSidebar = () =>
+    setCollapsed((c) => {
+      localStorage.setItem("tenant-sidebar-collapsed", c ? "0" : "1");
+      return !c;
+    });
+  // Dark mode
+  const [theme, setTheme] = useState(readTheme);
+  const dark = theme === "dark";
+  const toggleTheme = () => {
+    const next = dark ? "light" : "dark";
+    saveTheme(next);
+    setTheme(next);
+  };
   const navigate = (nextPage) => {
     setPage(nextPage);
     window.history.pushState({}, "", `/${PAGE_SLUGS[nextPage]}`);
@@ -124,56 +146,136 @@ export default function Tenant({
     "Profile Settings": <ProfileSettings logo={logo} profile={profile} />,
   };
   return (
-    <div className="tenant-portal flex min-h-screen bg-slate-50 text-gray-900">
-      <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col bg-sky-100/70">
-        <div className="border-b border-sky-200 px-6 py-5">
-          <p className="text-xl font-semibold text-slate-800">Tenant Portal</p>
-          {profile?.mallName && (
-            <p className="mt-1 flex items-start gap-1.5 text-sm text-slate-600" title={profile.mallName}>
-              <MapPin size={15} className="mt-0.5 shrink-0 text-sky-600" />
-              <span>{profile.mallName}</span>
+    <div
+      className={`tenant-portal flex min-h-screen bg-slate-50 text-gray-900 ${dark ? "theme-dark" : ""}`}
+    >
+      {/* Sidebar */}
+      <aside
+        className={`tenant-sidebar sticky top-0 flex h-screen shrink-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200 ${
+          collapsed ? "w-20" : "w-64"
+        }`}
+      >
+        <div
+          className={`flex h-[73px] items-center gap-2 border-b border-slate-200 ${
+            collapsed ? "justify-center px-3" : "pl-6 pr-3"
+          }`}
+        >
+          {!collapsed && (
+            <p className="min-w-0 flex-1 truncate text-xl font-semibold text-slate-800">
+              Tenant Portal
             </p>
           )}
+          {/* Collapse toggle */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!collapsed}
+            className="shrink-0 rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+          >
+            {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+          </button>
         </div>
-        <nav className="flex-1 space-y-1 p-4">
+        {/* Nav */}
+        <nav className={`flex flex-1 flex-col gap-1 ${collapsed ? "p-3" : "p-4"}`}>
           {NAV.map(([n, I]) => (
             <button
               key={n}
               onClick={() => navigate(n)}
-              className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
+              title={collapsed ? n : undefined}
+              aria-label={n}
+              aria-current={page === n ? "page" : undefined}
+              className={`flex w-full items-center gap-3 rounded-lg py-3 transition-colors ${
+                collapsed ? "justify-center px-0" : "px-4"
+              } ${
                 page === n
-                  ? "bg-sky-200/70 font-medium text-blue-700"
-                  : "text-slate-700 hover:bg-sky-200/50 hover:text-slate-900"
+                  ? "bg-blue-50 font-medium text-blue-700"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
-              <I size={20} />
-              {n}
+              <I size={20} className="shrink-0" />
+              {!collapsed && n}
             </button>
           ))}
+          {/* Dark mode switch */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={dark}
+            aria-label="Dark mode"
+            onClick={toggleTheme}
+            title={collapsed ? `Dark mode: ${dark ? "on" : "off"}` : undefined}
+            className={`mt-auto flex w-full items-center gap-3 rounded-lg py-3 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 ${
+              collapsed ? "justify-center px-0" : "px-4"
+            }`}
+          >
+            {dark ? (
+              <Moon size={20} className="shrink-0" aria-hidden="true" />
+            ) : (
+              <Sun size={20} className="shrink-0" aria-hidden="true" />
+            )}
+            {!collapsed && (
+              <>
+                <span className="flex-1 text-left">Dark mode</span>
+                <span
+                  aria-hidden="true"
+                  className={`relative block h-5 w-9 shrink-0 rounded-full transition-colors ${
+                    dark ? "bg-[#5094fb]" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-4 w-4 rounded-full bg-[#fff] shadow-sm transition-all ${
+                      dark ? "left-4.5" : "left-0.5"
+                    }`}
+                  />
+                </span>
+              </>
+            )}
+          </button>
         </nav>
-        <div className="flex items-center gap-2 border-t border-sky-200 p-4">
+        <div
+          className={`flex items-center gap-2 border-t border-slate-200 ${
+            collapsed ? "flex-col p-3" : "p-4"
+          }`}
+        >
+          {/* Profile card */}
           <div
             onClick={() => navigate("Profile Settings")}
             role="button"
             tabIndex={0}
+            title={collapsed ? [profile?.name, profile?.mallName || profile?.subtitle].filter(Boolean).join(" · ") : undefined}
             onKeyDown={(event) =>
               event.key === "Enter" && navigate("Profile Settings")
             }
-            className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-sky-200/50"
+            className={`flex min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors ${
+              page === "Profile Settings" ? "bg-blue-50" : "hover:bg-slate-100"
+            } ${collapsed ? "justify-center" : "flex-1"}`}
           >
             <Logo src={logo} size="h-10 w-10 shrink-0" />
-            <span className="min-w-0 flex-1">
-              <b className="block truncate text-sm">{profile?.name}</b>
-              <span className="block truncate text-xs text-slate-600">
-                {profile?.subtitle}
+            {!collapsed && (
+              <span className="min-w-0 flex-1">
+                <b className="block truncate text-sm">{profile?.name}</b>
+                <span
+                  className="flex items-center gap-1 text-xs text-slate-500"
+                  title={profile?.mallName || profile?.subtitle}
+                >
+                  {profile?.mallName && (
+                    <MapPin size={12} className="shrink-0 text-blue-600" />
+                  )}
+                  <span className="truncate">
+                    {profile?.mallName || profile?.subtitle}
+                  </span>
+                </span>
               </span>
-            </span>
+            )}
           </div>
+          {/* Logout */}
           <button
             onClick={() => onLogout?.()}
             title="Logout"
             aria-label="Logout"
-            className="shrink-0 rounded-lg p-2.5 text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600"
+            className="shrink-0 rounded-lg p-2.5 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
           >
             <LogOut size={18} />
           </button>

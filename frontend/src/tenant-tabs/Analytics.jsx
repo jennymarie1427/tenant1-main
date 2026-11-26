@@ -9,6 +9,7 @@ import {
   Bar,
   Pie,
   StyledSelect,
+  AlertModal,
 } from "./shared";
 import { downloadCsv, useMounted, today } from "./utils";
 import { ANALYTICS_RANGES } from "../lib/storeInsights";
@@ -18,6 +19,7 @@ import { SavedCopyNote } from "../components/common/ConnectionStatus";
 
 const EMPTY_SERIES = { data: [], max: 0, ticks: [], labels: [] };
 
+// Pie placeholder
 const PieSkeleton = () => (
   <div className="flex flex-col items-center gap-4 py-4" aria-hidden="true">
     <Skeleton className="h-44 w-44 rounded-full" />
@@ -29,6 +31,7 @@ const PieSkeleton = () => (
 export function Analytics({ profile, data, storeId }) {
   const on = useMounted();
   const [range, setRange] = useState(ANALYTICS_RANGES[0].label);
+  const [alert, setAlert] = useState(null);
   const days = ANALYTICS_RANGES.find((r) => r.label === range)?.days || 7;
   const { view, loading, error, savedAt } = useStoreInsights(storeId, days);
   const analytics = view || data || {};
@@ -47,7 +50,19 @@ export function Analytics({ profile, data, storeId }) {
   const hasPeak = peak.data.some((v) => v > 0);
   const hasPromoActivity = perf.some(([, e, o, v]) => e > 0 || o > 0 || v > 0);
 
-  const exportCsv = () =>
+  // CSV export
+  const exportCsv = () => {
+    try {
+      buildCsv();
+      setAlert({ message: "Analytics report exported.", variant: "success" });
+    } catch (exportError) {
+      setAlert({
+        message: exportError.message || "Unable to export analytics report.",
+        variant: "error",
+      });
+    }
+  };
+  const buildCsv = () =>
     downloadCsv(`${profile?.name || "store"}-analytics-${today()}.csv`, [
       [`${profile?.name || "Store"} - Analytics Report`],
       ["Period", range],
@@ -81,6 +96,11 @@ export function Analytics({ profile, data, storeId }) {
 
   return (
     <>
+      <AlertModal
+        message={alert?.message}
+        variant={alert?.variant}
+        onClose={() => setAlert(null)}
+      />
       <Head
         title="Analytics"
         sub="Track your store performance and customer insights"
@@ -99,6 +119,7 @@ export function Analytics({ profile, data, storeId }) {
           {error}
         </p>
       )}
+      {/* Summary stats */}
       {firstLoad ? (
         <StatCardsSkeleton />
       ) : (
@@ -119,6 +140,7 @@ export function Analytics({ profile, data, storeId }) {
           ))}
         </div>
       )}
+      {/* Visits chart */}
       <Card className="mb-6 p-6">
         <h3 className="mb-1 text-xl">Customer Visits Over Time</h3>
         <p className="mb-6 text-sm text-gray-500">
@@ -130,6 +152,7 @@ export function Analytics({ profile, data, storeId }) {
             ? <LineDots key={range} data={visits.data} max={visits.max} ticks={visits.ticks} labels={visits.labels} />
             : empty(`No customer visits in the ${range.toLowerCase()}.`)}
       </Card>
+      {/* Peak times chart */}
       <Card className="mb-6 p-6">
         <h3 className="mb-1 text-xl">Peak Visit Times</h3>
         <p className="mb-6 text-sm text-gray-500">When navigation to your store starts (Philippine time).</p>
@@ -155,6 +178,7 @@ export function Analytics({ profile, data, storeId }) {
           empty("No visits to show yet.")
         )}
       </Card>
+      {/* Demographics */}
       <div className="mb-6 grid grid-cols-2 gap-6">
         <Card className="p-6">
           <h3 className="text-xl">Age Distribution</h3>
@@ -179,6 +203,7 @@ export function Analytics({ profile, data, storeId }) {
           )}
         </Card>
       </div>
+      {/* Promotion performance */}
       <Card className="mb-6 p-6">
         <h3 className="mb-1 text-xl">Promotion Performance</h3>
         <p className="mb-6 text-sm text-gray-500">
@@ -257,6 +282,7 @@ export function Analytics({ profile, data, storeId }) {
           </>
         )}
       </Card>
+      {/* Export */}
       <Card className="flex items-center justify-between p-6">
         <p className="text-sm text-gray-500">
           Download all the data on this page as a CSV file.
