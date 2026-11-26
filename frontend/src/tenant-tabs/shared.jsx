@@ -195,7 +195,7 @@ export function Toggle({ on, onChange, label }) {
       className={`relative h-5 w-9 shrink-0 rounded-full transition ${on ? "bg-[#5094fb]" : "bg-gray-300"}`}
     >
       <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-[#fff] shadow-sm transition-all ${on ? "left-4.5" : "left-0.5"}`}
+        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${on ? "left-4.5" : "left-0.5"}`}
       />
     </button>
   );
@@ -208,7 +208,6 @@ export const Logo = ({ src = "/store-logo.png", size = "h-24 w-24" }) => (
     className={`${size} shrink-0 rounded-[22%] object-cover`}
   />
 );
-
 
 // Logo upload button
 export function LogoButton({ setLogo, onFile, children }) {

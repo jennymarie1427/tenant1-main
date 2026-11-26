@@ -156,7 +156,7 @@ export default function Tenant({
         }`}
       >
         <div
-          className={`flex h-[73px] items-center gap-2 border-b border-slate-200 ${
+          className={`flex h-18.25 items-center gap-2 border-b border-slate-200 ${
             collapsed ? "justify-center px-3" : "pl-6 pr-3"
           }`}
         >
@@ -225,7 +225,7 @@ export default function Tenant({
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 h-4 w-4 rounded-full bg-[#fff] shadow-sm transition-all ${
+                    className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${
                       dark ? "left-4.5" : "left-0.5"
                     }`}
                   />
